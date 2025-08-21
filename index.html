@@ -1,10 +1,46 @@
 <!doctype html>
 <html lang="vi">
 <head>
+  <style>
+    .mobile-nav {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  height: 100%;
+  width: 260px;
+  background: var(--card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: right 0.3s ease;
+  z-index: 100;
+}
+.mobile-nav.active {
+  right: 0;
+}
+.mobile-nav a {
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+:root.light {
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --text: #1f2937;
+  --accent: #2563eb;
+  --accent-2: #7c3aed;
+}
+  </style>
+  <style>#calendar { max-width: 900px; margin: 20px auto; }</style>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Trang web chính thức của Trường THCS Đoàn Kết, Quảng Ngãi. Thông tin học sinh, giáo viên, và các hoạt động.">
-<title>Trường THCS Đoàn Kết - Quảng Ngãi</title>
+<meta name="keywords" content="Trường THCS Đoàn Kết, Quảng Ngãi, tuyển sinh, giáo dục, học sinh, tin tức trường học">
+<meta property="og:title" content="Trường THCS Đoàn Kết - Quảng Ngãi">
+<meta property="og:description" content="Cổng thông tin điện tử Trường THCS Đoàn Kết, Ia Chim, Quảng Ngãi. Cập nhật tin tức, tuyển sinh, và hoạt động.">
+<meta property="og:image" content="https://yourdomain.com/logo.jpg">
+<meta property="og:url" content="https://yourdomain.com">
+<meta name="twitter:card" content="summary_large_image">
   <meta name="description" content="Mẫu website trường học phong cách hiện đại, tối ưu di động, hiệu ứng VIP mượt, dễ chỉnh sửa."
   />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,16 +195,17 @@
         </div>
       </div>
       <div class="grow"></div>
-      <nav>
-        <a href="#gioithieu">Giới thiệu</a>
-        <a href="#tintuc">Tin tức</a>
-        <a href="#tuyensinh">Tuyển sinh</a>
-        <a href="#lich">Lịch</a>
-        <a href="#lienhe">Liên hệ</a>
-      </nav>
+      <nav class="mobile-nav hidden" id="mobileNav">
+  <a href="#gioithieu">Giới thiệu</a>
+  <a href="#tintuc">Tin tức</a>
+  <a href="#tuyensinh">Tuyển sinh</a>
+  <a href="#lich">Lịch</a>
+  <a href="#lienhe">Liên hệ</a>
+</nav>
       <a class="cta" href="#tuyensinh">Đăng ký tuyển sinh</a>
+    <button class="cta" id="themeToggle">🌙</button>
       <a class="cta mobile" href="#menu" id="btnMenu">☰</a>
-    </div>
+      <div class="section-title">
   </header>
 
   <!-- TICKER -->
@@ -181,6 +218,10 @@
       </div>
     </div>
   </div>
+<div class="section-title">
+  <h2>Tin tức & Thông báo</h2>
+  <input type="search" id="newsSearch" placeholder="Tìm kiếm tin tức..." style="padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:var(--text)">
+</div>
 
   <!-- HERO -->
   <section class="hero" id="gioithieu">
@@ -321,6 +362,7 @@
         <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop" alt="4" />
         <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=1200&auto=format&fit=crop" alt="5" />
         <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?q=80&w=1200&auto=format&fit=crop" alt="6" />
+        <img src="image.webp" srcset="image-320w.webp 320w, image-768w.webp 768w, image-1200w.webp 1200w" sizes="(max-width: 768px) 100vw, 1200px" loading="lazy" alt="Khai giảng" />
       </div>
     </div>
   </section>
@@ -343,6 +385,7 @@
   <!-- FOOTER -->
   <footer>
     <div class="container">
+      <div id="calendar"></div>
       <div class="cols">
         <div>
           <div class="brand" style="margin-bottom:12px">
@@ -425,10 +468,67 @@
     });
   </script>
   <script src="https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js?mode=livechat" defer="defer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tlgb/loader@1.0.0/dist/loader.min.js" defer="defer"></script>
+  <script>
+    document.getElementById('btnMenu').addEventListener('click', () => {
+  document.getElementById('mobileNav').classList.toggle('active');
+});
+    document.querySelectorAll('.mobile-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('mobileNav').classList.remove('active');
+      });
+    });
+  </script>
+  <script>
+    const heroIll = document.querySelector('.hero-ill');
+heroIll.addEventListener('mousemove', (e) => {
+  const rect = heroIll.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  heroIll.querySelectorAll('.orb').forEach(orb => {
+    orb.style.transform = `translate(${x * 20}px, ${y * 20}px)`;
+  });
+});
+heroIll.addEventListener('mouseleave', () => {
+  heroIll.querySelectorAll('.orb').forEach(orb => {
+    orb.style.transform = 'translate(0, 0)';
+  });
+});
+  </script>
+  <script>
+    document.getElementById('themeToggle').addEventListener('click', () => {
+  document.documentElement.classList.toggle('light');
+  localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
+});
+if (localStorage.getItem('theme') === 'light') {
+  document.documentElement.classList.add('light');
+}
+  </script>
+  <script>
+    document.getElementById('newsSearch').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  document.querySelectorAll('.news').forEach(article => {
+    const text = article.textContent.toLowerCase();
+    article.style.display = text.includes(query) ? '' : 'none';
+  });
+});
+  </script>
+  <script>
+    import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js';
+document.addEventListener('DOMContentLoaded', () => {
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    events: [
+      { title: 'Chào cờ đầu tuần', start: '2025-08-25' },
+      { title: 'Họp tổ chuyên môn', start: '2025-08-26' },
+      { title: 'Sinh hoạt CLB STEM', start: '2025-08-28' },
+      { title: 'Lễ phát động thi đua', start: '2025-08-30' }
+    ]
+  });
+  calendar.render();
+});
+  </script>
 </body>
 
 </html>
-
-
-
-
