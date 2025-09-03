@@ -713,20 +713,20 @@
     });
 
     // Counters
-    const counters = [{el:'st1',to:1200},{el:'st2',to:85},{el:'st3',to:42}];
-    counters.forEach(({el,to}) => {
-      const node = document.getElementById(el);
-      let v = 0;
-      const step = Math.max(1, Math.floor(to / 80));
-      const iv = setInterval(() => {
-        v += step;
-        if (v >= to) {
-          v = to;
-          clearInterval(iv);
-        }
-        node.textContent = v.toLocaleString('vi-VN');
-      }, 16);
-    });
+        const counters = [{el:'st1',to:272},{el:'st2',to:19},{el:'st3',to:11}];
+        counters.forEach(({el,to}) => {
+          const node = document.getElementById(el);
+          let v = 0;
+          const step = Math.max(1, Math.floor(to / 80));
+          const iv = setInterval(() => {
+            v += step;
+            if (v >= to) {
+              v = to;
+              clearInterval(iv);
+            }
+            node.textContent = v.toLocaleString('vi-VN');
+          }, 16);
+        });
 
     // Smooth reveal on scroll
     const io = new IntersectionObserver(entries => {
@@ -761,7 +761,7 @@
 
       // Validation
       if (!['6', '10'].includes(grade)) {
-        msg.textContent = '❌ Lớp đăng ký phải là 6 hoặc 10.';
+        msg.textContent = '❌ Lớp đăng ký phải là 6 hoặc 9.';
         msg.classList.add('error-message');
         return;
       }
