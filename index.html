@@ -18,143 +18,167 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <style>
-    :root{
-      --bg:#0b0f19; --card:#12192b; --muted:#93a4c3; --text:#eaf1ff;
-      --accent:#4f9cff; --accent-2:#9b8cff; --success:#00e6a8; --danger:#ff6b6b;
-      --radius:20px; --shadow:0 10px 30px rgba(0,0,0,.28); --glass:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    :root {
+      --bg: #0b0f19;
+      --card: #12192b;
+      --muted: #93a4c3;
+      --text: #eaf1ff;
+      --accent: #4f9cff;
+      --accent-2: #9b8cff;
+      --success: #00e6a8;
+      --danger: #ff6b6b;
+      --radius: 20px;
+      --shadow: 0 10px 30px rgba(0,0,0,.28);
+      --glass: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
     }
-    :root.light{
-      --bg:#f5f7fa; --card:#fff; --muted:#6b7280; --text:#1f2937; --accent:#2563eb; --accent-2:#7c3aed;
+    :root.light {
+      --bg: #f5f7fa;
+      --card: #fff;
+      --muted: #6b7280;
+      --text: #1f2937;
+      --accent: #2563eb;
+      --accent-2: #7c3aed;
     }
 
     /* Reset & base */
-    *,*::before,*::after{box-sizing:border-box}
-    html{font-family:"Be Vietnam Pro",system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;font-size:16px;line-height:1.5}
-    body{margin:0;color:var(--text);background:
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-family: "Be Vietnam Pro", system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; font-size: 16px; line-height: 1.5; }
+    body { margin: 0; color: var(--text); background: 
       radial-gradient(1200px 600px at 10% -10%, rgba(79,156,255,.18), transparent 40%),
       radial-gradient(900px 500px at 110% 10%, rgba(155,140,255,.14), transparent 55%),
-      var(--bg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
-    a{color:inherit;text-decoration:none}
-    .container{width:min(1200px,92vw);margin-inline:auto}
+      var(--bg); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1200px, 92vw); margin-inline: auto; }
 
     /* Header / Nav */
-    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(120%) blur(10px);background:linear-gradient(180deg, rgba(10,14,24,.78), rgba(10,14,24,.45));border-bottom:1px solid rgba(255,255,255,.06)}
-    .nav{display:flex;align-items:center;gap:18px;padding:12px 0}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:800}
-    .brand .logo{width:40px;height:40px;border-radius:12px;background:conic-gradient(from 180deg,var(--accent),var(--accent-2),var(--success));box-shadow:0 6px 14px rgba(79,156,255,.22);flex:0 0 40px}
-    nav a{opacity:.95;padding:8px 12px;border-radius:12px;transition:background .18s,transform .12s}
-    nav a:hover,nav a:focus{background:rgba(255,255,255,.04);outline:none;transform:translateY(-1px)}
+    header { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(120%) blur(10px); background: linear-gradient(180deg, rgba(10,14,24,.78), rgba(10,14,24,.45)); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav { display: flex; align-items: center; gap: 18px; padding: 12px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
+    .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: conic-gradient(from 180deg, var(--accent), var(--accent-2), var(--success)); box-shadow: 0 6px 14px rgba(79,156,255,.22); flex: 0 0 40px; }
+    nav a { opacity: .95; padding: 8px 12px; border-radius: 12px; transition: background .18s, transform .12s; }
+    nav a:hover, nav a:focus { background: rgba(255,255,255,.04); outline: none; transform: translateY(-1px); }
 
     /* CTA */
-    .cta{display:inline-flex;align-items:center;gap:8px;background:var(--glass);border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;transition:transform .18s}
-    .cta:focus,.cta:hover{transform:translateY(-2px);outline:none}
+    .cta { display: inline-flex; align-items: center; gap: 8px; background: var(--glass); border: 1px solid rgba(255,255,255,.12); padding: 10px 14px; border-radius: 12px; transition: transform .18s; }
+    .cta:focus, .cta:hover { transform: translateY(-2px); outline: none; }
 
     /* Mobile nav */
-    .mobile-nav{position:fixed;top:0;right:-100%;height:100%;width:280px;background:var(--card);padding:20px;display:flex;flex-direction:column;gap:12px;transition:right .28s ease;z-index:100}
-    .mobile-nav.active{right:0}
-    .mobile-nav a{padding:12px;border-radius:10px}
-    .mobile-nav a:focus,.mobile-nav a:hover{background:var(--accent);color:var(--card);outline:none}
-    .mobile-nav .close-btn{align-self:flex-end;padding:8px 10px;background:var(--danger);border-radius:10px;color:var(--card);cursor:pointer;border:none}
+    .mobile-nav { position: fixed; top: 0; right: -100%; height: 100%; width: 280px; background: var(--card); padding: 20px; display: flex; flex-direction: column; gap: 12px; transition: right .28s ease; z-index: 100; }
+    .mobile-nav.active { right: 0; }
+    .mobile-nav a { padding: 12px; border-radius: 10px; }
+    .mobile-nav a:focus, .mobile-nav a:hover { background: var(--accent); color: var(--card); outline: none; }
+    .mobile-nav .close-btn { align-self: flex-end; padding: 8px 10px; background: var(--danger); border-radius: 10px; color: var(--card); cursor: pointer; border: none; }
 
     /* Ticker */
-    .ticker{background:linear-gradient(90deg, rgba(79,156,255,.12), rgba(155,140,255,.12));border-block:1px solid rgba(255,255,255,.04);overflow:hidden}
-    .ticker-inner{display:flex;gap:28px;white-space:nowrap;padding:8px 0;animation:marquee 20s linear infinite}
-    .ticker-inner:hover{animation-play-state:paused}
-    .ticker .tag{display:inline-block;margin-right:10px;padding:2px 8px;border-radius:999px;background:rgba(0,230,168,.12);color:var(--success);font-weight:700;font-size:12px;border:1px solid rgba(0,230,168,.24)}
-    @keyframes marquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+    .ticker { background: linear-gradient(90deg, rgba(79,156,255,.12), rgba(155,140,255,.12)); border-block: 1px solid rgba(255,255,255,.04); overflow: hidden; }
+    .ticker-inner { display: flex; gap: 28px; white-space: nowrap; padding: 8px 0; animation: marquee 20s linear infinite; }
+    .ticker-inner:hover { animation-play-state: paused; }
+    .ticker .tag { display: inline-block; margin-right: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(0,230,168,.12); color: var(--success); font-weight: 700; font-size: 12px; border: 1px solid rgba(0,230,168,.24); }
+    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
     /* Hero */
-    .hero{padding:56px 0 80px}
-    .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
-    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px dashed rgba(255,255,255,.08);font-size:13px;opacity:.95}
-    .h1{font-size:clamp(28px,3.6vw,44px);margin:14px 0 12px;line-height:1.05}
-    .lead{font-size:clamp(14px,1.6vw,18px);color:var(--muted)}
+    .hero { padding: 56px 0 80px; }
+    .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px; align-items: center; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px dashed rgba(255,255,255,.08); font-size: 13px; opacity: .95; }
+    .h1 { font-size: clamp(28px, 3.6vw, 44px); margin: 14px 0 12px; line-height: 1.05; }
+    .lead { font-size: clamp(14px, 1.6vw, 18px); color: var(--muted); }
 
     /* Cards / Stats */
-    .hero-card,.card{background:var(--glass);border:1px solid rgba(255,255,255,.08);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .22s}
-    .hero-card:hover,.card:hover{transform:translateY(-4px)}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    .stat{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);padding:12px;border-radius:12px;text-align:center;transition:transform .18s}
-    .stat b{display:block;font-size:20px}
-    .stat:hover{transform:scale(1.03)}
+    .hero-card, .card { background: var(--glass); border: 1px solid rgba(255,255,255,.08); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow); transition: transform .22s; }
+    .hero-card:hover, .card:hover { transform: translateY(-4px); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .stat { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); padding: 12px; border-radius: 12px; text-align: center; transition: transform .18s; }
+    .stat b { display: block; font-size: 20px; }
+    .stat:hover { transform: scale(1.03); }
 
     /* Hero illustration */
-    .hero-ill{height:320px;border-radius:var(--radius);position:relative;overflow:hidden;background:radial-gradient(650px 220px at 50% -20%, rgba(79,156,255,.24), transparent)}
-    .orbit{position:absolute;inset:0;pointer-events:none}
-    .orb{position:absolute;border-radius:50%;filter:blur(8px);opacity:.85;transition:transform .22s}
-    .orb.blue{background:radial-gradient(circle at 30% 30%, rgba(79,156,255,.9), rgba(79,156,255,.04));width:110px;height:110px;left:8%;top:16%}
-    .orb.purple{background:radial-gradient(circle at 30% 30%, rgba(155,140,255,.88), rgba(155,140,255,.04));width:150px;height:150px;right:12%;top:8%}
-    .orb.green{background:radial-gradient(circle at 30% 30%, rgba(0,230,168,.9), rgba(0,230,168,.04));width:110px;height:110px;left:36%;bottom:8%}
+    .hero-ill { height: 320px; border-radius: var(--radius); position: relative; overflow: hidden; background: radial-gradient(650px 220px at 50% -20%, rgba(79,156,255,.24), transparent); }
+    .orbit { position: absolute; inset: 0; pointer-events: none; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(8px); opacity: .85; transition: transform .22s; }
+    .orb.blue { background: radial-gradient(circle at 30% 30%, rgba(79,156,255,.9), rgba(79,156,255,.04)); width: 110px; height: 110px; left: 8%; top: 16%; }
+    .orb.purple { background: radial-gradient(circle at 30% 30%, rgba(155,140,255,.88), rgba(155,140,255,.04)); width: 150px; height: 150px; right: 12%; top: 8%; }
+    .orb.green { background: radial-gradient(circle at 30% 30%, rgba(0,230,168,.9), rgba(0,230,168,.04)); width: 110px; height: 110px; left: 36%; bottom: 8%; }
 
     /* Sections / layout */
-    section{padding:48px 0}
-    .section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}
-    .section-title h2{margin:0;font-size:1.25rem}
-    .section-title p{margin:0;color:var(--muted)}
-    .grid{display:grid;gap:14px}
-    .grid-3{grid-template-columns:repeat(3,1fr)}
-    .grid-4{grid-template-columns:repeat(4,1fr)}
+    section { padding: 48px 0; }
+    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .section-title h2 { margin: 0; font-size: 1.25rem; }
+    .section-title p { margin: 0; color: var(--muted); }
+    .grid { display: grid; gap: 14px; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
     /* News / gallery */
-    .news img{width:100%;height:160px;object-fit:cover;display:block}
-    .news h3{margin:8px 0 6px;font-size:1.05rem}
-    .news p{margin:0;color:var(--muted)}
-    .gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-    .gallery img{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+    .news img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .news h3 { margin: 8px 0 6px; font-size: 1.05rem; }
+    .news p { margin: 0; color: var(--muted); }
+    .gallery { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .gallery img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); }
 
     /* Admissions / forms */
-    .admissions{display:grid;grid-template-columns:1fr .95fr;gap:20px;align-items:center}
-    .step{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px}
-    .step .num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(79,156,255,.12);border:1px solid rgba(79,156,255,.28);font-weight:700}
+    .admissions { display: grid; grid-template-columns: 1fr .95fr; gap: 20px; align-items: center; }
+    .step { display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 12px; }
+    .step .num { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(79,156,255,.12); border: 1px solid rgba(79,156,255,.28); font-weight: 700; }
 
     /* Timeline / calendar */
-    .timeline{display:grid;gap:12px}
-    .tl-item{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}
-    .tl-item .bubble{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px}
-    #calendar{max-width:900px;margin:18px auto}
+    .timeline { display: grid; gap: 12px; }
+    .tl-item { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: start; }
+    .tl-item .bubble { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 12px; }
+    #calendar { max-width: 900px; margin: 18px auto; }
 
     /* Footer */
-    footer{padding:36px 0 60px;background:linear-gradient(180deg, rgba(10,14,24,.8), rgba(10,14,24,.9));border-top:1px solid rgba(255,255,255,.06)}
-    .cols{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px}
-    .copy{margin-top:14px;color:var(--muted);font-size:14px}
+    footer { padding: 36px 0 60px; background: linear-gradient(180deg, rgba(10,14,24,.8), rgba(10,14,24,.9)); border-top: 1px solid rgba(255,255,255,.06); }
+    .cols { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 20px; }
+    .copy { margin-top: 14px; color: var(--muted); font-size: 14px; }
 
     /* Utility */
-    .muted{color:var(--muted)}
-    .hidden{display:none}
-    .chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+    .muted { color: var(--muted); }
+    .hidden { display: none; }
+    .chip { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.02); }
 
     /* Accessibility & perf */
-    :root{--reduced-motion:0}
-    @media (prefers-reduced-motion:reduce){*{animation-duration:0.001ms!important;transition-duration:0.001ms!important;scroll-behavior:auto} :root{--reduced-motion:1}}
-    @media (max-width:980px){
-      .hero .wrap,.admissions{grid-template-columns:1fr}
-      .grid-3{grid-template-columns:1fr}
-      .grid-4{grid-template-columns:1fr 1fr}
-      .gallery{grid-template-columns:repeat(3,1fr)}
-      .cols{grid-template-columns:1fr 1fr}
-      nav{display:none}
-      .mobile{display:initial}
+    :root { --reduced-motion: 0; }
+    @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto; } :root { --reduced-motion: 1; } }
+    @media (max-width: 980px) {
+      .hero .wrap, .admissions { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .gallery { grid-template-columns: repeat(3, 1fr); }
+      .cols { grid-template-columns: 1fr 1fr; }
+      nav { display: none; }
+      .mobile { display: initial; }
     }
 
     /* Compact overrides for added blocks */
-    #teacher-reviews,#about-school{padding:1.5rem;background:var(--card);border-radius:12px;margin:1.5rem auto;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-    .reviews-container{display:grid;gap:1rem}
-    .review-card{padding:1rem;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,.04)}
-    .review-card .stars{color:gold;font-size:1.1rem}
-    #reviewForm{display:flex;flex-direction:column;gap:.5rem}
-    #reviewForm input,#reviewForm select,#reviewForm textarea{padding:.6rem;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--text)}
-    #reviewForm button{background:var(--accent);color:#fff;padding:.7rem;border:none;border-radius:8px;cursor:pointer}
-    .error-message{background:rgba(255,75,75,.08);border:1px solid var(--danger);padding:10px;border-radius:8px;color:var(--danger);font-size:14px}
+    #teacher-reviews, #about-school { padding: 1.5rem; background: var(--card); border-radius: 12px; margin: 1.5rem auto; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+    .reviews-container { display: grid; gap: 1rem; }
+    .review-card { padding: 1rem; border-radius: 10px; background: var(--card); border: 1px solid rgba(255,255,255,.04); }
+    .review-card .stars { color: gold; font-size: 1.1rem; }
+    #reviewForm { display: flex; flex-direction: column; gap: .5rem; }
+    #reviewForm input, #reviewForm select, #reviewForm textarea { padding: .6rem; border-radius: 8px; border: 1px solid rgba(255,255,255,.06); background: transparent; color: var(--text); }
+    #reviewForm button { background: var(--accent); color: #fff; padding: .7rem; border: none; border-radius: 8px; cursor: pointer; }
+    .error-message { background: rgba(255,75,75,.08); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; color: var(--danger); font-size: 14px; }
 
     /* FullCalendar theme hooks */
-    .fc{--fc-border-color:rgba(255,255,255,.08);--fc-event-bg:var(--accent)}
-    .fc-theme-standard .fc-scrollgrid{background:var(--card)}
-    .fc .fc-daygrid-event{background:var(--accent);border-color:var(--accent);color:var(--card)}
+    .fc { --fc-border-color: rgba(255,255,255,.08); --fc-event-bg: var(--accent); }
+    .fc-theme-standard .fc-scrollgrid { background: var(--card); }
+    .fc .fc-daygrid-event { background: var(--accent); border-color: var(--accent); color: var(--card); }
+    .fc .fc-daygrid-event:hover { background: var(--accent-2); cursor: pointer; }
+    .fc .fc-daygrid-event-dot { border-color: var(--success); }
+
+    /* New styles for upgrades */
+    .news-filter { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .news-filter button { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--text); cursor: pointer; transition: background .18s; }
+    .news-filter button.active { background: var(--accent); color: var(--card); }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card); padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: var(--shadow); }
+    .modal-content h3 { margin: 0 0 12px; }
+    .modal-content button { background: var(--accent); color: var(--card); padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
   </style>
 
-  <!-- Lazy-load JS for heavier libs only when needed (calendar or chat) -->
   <script>
     (function(){
       var loaded = {};
@@ -174,13 +198,11 @@
 
       function loadIfCalendarVisible(){
         if(!document.getElementById('calendar')) return Promise.resolve();
-        // load FullCalendar only when user interacts / sees calendar
-        return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js', {defer:true})
-          .then(function(){ return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js', {defer:true}); })
+        return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', {defer:true})
+          .then(function(){ return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js', {defer:true}); })
           .catch(function(e){ console.warn('FullCalendar failed to load', e); });
       }
 
-      // intersection observer for calendar
       document.addEventListener('DOMContentLoaded', function(){
         var calEl = document.getElementById('calendar');
         if(!calEl) return;
@@ -195,30 +217,41 @@
           }, {rootMargin:'300px'});
           io.observe(calEl);
         } else {
-          // fallback: load after short delay
           setTimeout(loadIfCalendarVisible, 1200);
         }
       });
-
-      // Provide a safe helper to load chat when requested (avoid blocking head)
-      window.__lazyLoadChat = function(){
-        return loadScript('https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js', {async:true})
-          .catch(function(){ document.getElementById && document.getElementById('chatFallback') && document.getElementById('chatFallback').classList.remove('hidden'); });
-      };
     })();
   </script>
 
   <script type="application/ld+json">
   {
-    "@context":"https://schema.org",
-    "@type":"EducationalOrganization",
-    "name":"Trường THCS Đoàn Kết",
-    "description":"Trường THCS Đoàn Kết tại Ia Chim, Quảng Ngãi — môi trường học tập kỷ cương, thân thiện và sáng tạo.",
-    "url":"https://yourdomain.com",
-    "logo":"https://yourdomain.com/logo.webp",
-    "address":{"@type":"PostalAddress","streetAddress":"Thôn 5, xã Đoàn Kết","addressLocality":"Ia Chim","addressRegion":"Quảng Ngãi","postalCode":"570000"},
-    "contactPoint":[{"@type":"ContactPoint","telephone":"+84-34-870-7829","contactType":"Văn phòng","email":"giabaotranle56@gmail.com","availableLanguage":["Vietnamese"]}],
-    "sameAs":["https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN","https://www.youtube.com/","https://zalo.me/0348707829"]
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Trường THCS Đoàn Kết",
+    "description": "Trường THCS Đoàn Kết tại Ia Chim, Quảng Ngãi — môi trường học tập kỷ cương, thân thiện và sáng tạo.",
+    "url": "https://yourdomain.com",
+    "logo": "https://yourdomain.com/logo.webp",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Thôn 5, xã Đoàn Kết",
+      "addressLocality": "Ia Chim",
+      "addressRegion": "Quảng Ngãi",
+      "postalCode": "570000"
+    },
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+84-34-870-7829",
+        "contactType": "Văn phòng",
+        "email": "giabaotranle56@gmail.com",
+        "availableLanguage": ["Vietnamese"]
+      }
+    ],
+    "sameAs": [
+      "https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN",
+      "https://www.youtube.com/",
+      "https://zalo.me/0348707829"
+    ]
   }
   </script>
 </head>
@@ -409,6 +442,14 @@
           <input type="search" id="newsSearch" placeholder="Tìm kiếm tin tức..." aria-label="Tìm kiếm tin tức" autocomplete="off" style="padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:var(--text)">
         </div>
 
+        <div class="news-filter" role="group" aria-label="Lọc tin tức theo danh mục">
+          <button data-filter="all" class="active">Tất cả</button>
+          <button data-filter="khai-giang">Khai giảng</button>
+          <button data-filter="vinh-danh">Vinh danh</button>
+          <button data-filter="stem">STEM</button>
+          <button data-filter="tong-ket">Tổng kết</button>
+        </div>
+
         <div role="status" aria-live="polite" style="margin-top:12px;">
           <article class="card" style="display:inline-block; padding:10px 14px; border-radius:12px;">
             <div class="p">
@@ -420,7 +461,7 @@
         </div>
 
         <div class="grid grid-3" style="margin-top:14px;">
-          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+          <article class="card news" data-category="khai-giang" itemscope itemtype="https://schema.org/NewsArticle">
             <img src="http://placehold.it/400x160?text=Khai+giang" alt="Hình ảnh lễ khai giảng" loading="lazy" decoding="async" itemprop="image" />
             <div class="p">
               <span class="chip" itemprop="datePublished" content="2025-09-05">05/09,06/09</span>
@@ -429,7 +470,7 @@
             </div>
           </article>
 
-          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+          <article class="card news" data-category="vinh-danh" itemscope itemtype="https://schema.org/NewsArticle">
             <img src="https://quickshare.samsungcloud.com/ls/public/v1/links/1756909598475LcxRC3h/contents/03c57fb188d211f085e34aeb037a28a2/resized/1280" alt="Hình ảnh vinh danh học sinh" loading="lazy" decoding="async" itemprop="image" />
             <div class="p">
               <span class="chip" itemprop="datePublished" content="2025-08-20">20/08</span>
@@ -438,7 +479,7 @@
             </div>
           </article>
 
-          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+          <article class="card news" data-category="stem" itemscope itemtype="https://schema.org/NewsArticle">
             <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39245/fck/files/IMG_1897.jpeg" alt="Hình ảnh ngày hội STEM" loading="lazy" decoding="async" itemprop="image" />
             <div class="p">
               <span class="chip" itemprop="datePublished" content="2025-08-15">15/08</span>
@@ -447,8 +488,7 @@
             </div>
           </article>
 
-          <!-- More news -->
-          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+          <article class="card news" data-category="tong-ket" itemscope itemtype="https://schema.org/NewsArticle">
             <img src="http://placehold.it/400x160?text=Tong+ket" alt="Hình ảnh tổng kết năm học" loading="lazy" decoding="async" itemprop="image" />
             <div class="p">
               <span class="chip" itemprop="datePublished" content="2025-05-27">27/05</span>
@@ -542,10 +582,22 @@
             <h3 style="margin:0 0 8px">Biểu mẫu nhanh</h3>
             <form id="applyForm" novalidate>
               <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-                <input required name="name" aria-required="true" placeholder="Họ và tên học sinh" aria-label="Họ và tên học sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-                <input required name="grade" aria-required="true" placeholder="Đăng ký lớp (6 hoặc 10)" pattern="^(6|10)$" aria-label="Lớp đăng ký" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-                <input required name="parent" placeholder="Họ tên phụ huynh" aria-label="Họ tên phụ huynh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-                <input required name="phone" placeholder="Số điện thoại" pattern="[0-9\s()+-]{8,}" aria-label="Số điện thoại" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <div style="position:relative">
+                  <input required name="name" aria-required="true" placeholder="Họ và tên học sinh" aria-label="Họ và tên học sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);width:100%" />
+                  <span class="error-message hidden" data-error="name">Vui lòng nhập họ tên học sinh.</span>
+                </div>
+                <div style="position:relative">
+                  <input required name="grade" aria-required="true" placeholder="Đăng ký lớp (6 hoặc 10)" pattern="^(6|10)$" aria-label="Lớp đăng ký" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);width:100%" />
+                  <span class="error-message hidden" data-error="grade">Lớp phải là 6 hoặc 10.</span>
+                </div>
+                <div style="position:relative">
+                  <input required name="parent" placeholder="Họ tên phụ huynh" aria-label="Họ tên phụ huynh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);width:100%" />
+                  <span class="error-message hidden" data-error="parent">Vui lòng nhập họ tên phụ huynh.</span>
+                </div>
+                <div style="position:relative">
+                  <input required name="phone" placeholder="Số điện thoại" pattern="[0-9\s()+-]{8,}" aria-label="Số điện thoại" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);width:100%" />
+                  <span class="error-message hidden" data-error="phone">Số điện thoại không hợp lệ.</span>
+                </div>
                 <input name="email" placeholder="Email (không bắt buộc)" type="email" aria-label="Email" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
                 <input name="address" placeholder="Địa chỉ" aria-label="Địa chỉ" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
                 <input type="file" name="documents" accept=".pdf,.jpg,.png" multiple aria-label="Tải lên học bạ hoặc giấy khai sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
@@ -632,7 +684,6 @@
               <h3 style="margin:0 0 6px">Địa chỉ</h3>
               <p class="muted">Ia Chim, tỉnh Quảng Ngãi (Thôn 5 xã Đoàn Kết)</p>
               <a class="btn" target="_blank" href="https://maps.app.goo.gl/PwmeZRzQmxno9VG98" rel="noopener noreferrer" aria-label="Xem bản đồ">Xem bản đồ</a>
-              <p id="chatFallback" class="error-message hidden" style="margin-top:8px">Không thể tải chat trực tuyến. Vui lòng liên hệ qua SĐT hoặc email.</p>
             </div>
           </div>
         </div>
@@ -640,6 +691,15 @@
     </section>
 
   </main>
+
+  <!-- Confirmation Modal -->
+  <div class="modal" id="confirmationModal" role="dialog" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <h3 id="modal-title">Xác nhận đăng ký</h3>
+      <p id="modalMessage" class="muted"></p>
+      <button onclick="closeModal()" aria-label="Đóng">Đóng</button>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer>
@@ -695,7 +755,7 @@
   (function () {
     'use strict';
 
-    // Small dynamic script loader (single instance guard)
+    // Small dynamic script loader
     const scriptCache = {};
     function loadScript(src, opts = {}) {
       if (scriptCache[src]) return scriptCache[src];
@@ -751,7 +811,7 @@
       });
     }
 
-    // Counters (smooth, performant)
+    // Counters
     const counters = [{ id: 'st1', value: 272 }, { id: 'st2', value: 19 }, { id: 'st3', value: 11 }];
     counters.forEach(({ id, value }) => {
       const el = document.getElementById(id);
@@ -771,7 +831,7 @@
       }, Math.max(12, Math.floor(duration / steps)));
     });
 
-    // Reveal on scroll (reuse existing IntersectionObserver pattern safely)
+    // Reveal on scroll
     const revealObserver = new IntersectionObserver((entries, obs) => {
       entries.forEach(en => {
         if (en.isIntersecting) {
@@ -783,21 +843,29 @@
       });
     }, { threshold: 0.12 });
     $$('.container > *').forEach(el => {
-      // only animate visible sections
       el.style.opacity = 0.001;
       el.style.transform = 'translateY(12px)';
       el.style.transition = 'all .6s cubic-bezier(.22,1,.36,1)';
       revealObserver.observe(el);
     });
 
-    // Form validation & submission (robust file-size check)
+    // Form validation & submission
     const applyForm = document.getElementById('applyForm');
     if (applyForm) {
+      const inputs = applyForm.querySelectorAll('input, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          const errorEl = applyForm.querySelector(`[data-error="${input.name}"]`);
+          if (errorEl) errorEl.classList.add('hidden');
+        });
+      });
+
       applyForm.addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const form = new FormData(applyForm);
         const name = (form.get('name') || '').toString().trim();
         const grade = (form.get('grade') || '').toString().trim();
+        const parent = (form.get('parent') || '').toString().trim();
         const phone = (form.get('phone') || '').toString().trim();
         const files = applyForm.querySelector('[name="documents"]') ? applyForm.querySelector('[name="documents"]').files : null;
         const msg = document.getElementById('applyMsg');
@@ -806,41 +874,84 @@
           msg.textContent = '';
         }
 
-        // Basic validations
-        if (!name) return setError('❌ Vui lòng nhập họ tên học sinh.');
-        if (!['6', '10'].includes(grade)) return setError('❌ Lớp đăng ký phải là 6 hoặc 10.');
-        if (!phone.match(/^[0-9\s()+-]{8,}$/)) return setError('❌ Số điện thoại không hợp lệ.');
-
-        // Files total size check (5MB)
+        // Real-time validations
+        let hasError = false;
+        if (!name) {
+          showError('name', 'Vui lòng nhập họ tên học sinh.');
+          hasError = true;
+        }
+        if (!['6', '10'].includes(grade)) {
+          showError('grade', 'Lớp phải là 6 hoặc 10.');
+          hasError = true;
+        }
+        if (!parent) {
+          showError('parent', 'Vui lòng nhập họ tên phụ huynh.');
+          hasError = true;
+        }
+        if (!phone.match(/^[0-9\s()+-]{8,}$/)) {
+          showError('phone', 'Số điện thoại không hợp lệ.');
+          hasError = true;
+        }
         if (files && files.length) {
           let total = 0;
           for (let i = 0; i < files.length; i++) total += files[i].size;
-          if (total > 5 * 1024 * 1024) return setError('❌ Tổng kích thước tệp vượt quá 5MB.');
+          if (total > 5 * 1024 * 1024) {
+            showError('documents', 'Tổng kích thước tệp vượt quá 5MB.');
+            hasError = true;
+          }
         }
+        if (!applyForm.querySelector('[type="checkbox"]').checked) {
+          showError('checkbox', 'Vui lòng đồng ý với điều khoản.');
+          hasError = true;
+        }
+
+        if (hasError) return;
 
         try {
-          // Replace this block with real API call if available
           if (msg) msg.textContent = '⏳ Đang gửi...';
           await new Promise(r => setTimeout(r, 900));
-          if (msg) msg.textContent = `✅ Đã nhận đăng ký cho ${name}. Nhà trường sẽ liên hệ sớm!`;
+          showModal(`✅ Đã nhận đăng ký cho ${name}. Nhà trường sẽ liên hệ sớm!`);
           applyForm.reset();
+          if (msg) msg.textContent = '';
         } catch (err) {
-          setError('❌ Có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.');
+          showError('general', 'Có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.');
         }
 
-        function setError(text) {
-          if (!msg) return;
-          msg.textContent = text;
-          msg.classList.add('error-message');
+        function showError(field, text) {
+          const errorEl = applyForm.querySelector(`[data-error="${field}"]`) || document.getElementById('applyMsg');
+          if (errorEl) {
+            errorEl.textContent = text;
+            errorEl.classList.remove('hidden');
+            if (errorEl !== msg) errorEl.classList.add('error-message');
+          }
+        }
+
+        function showModal(message) {
+          const modal = document.getElementById('confirmationModal');
+          const modalMessage = document.getElementById('modalMessage');
+          if (modal && modalMessage) {
+            modalMessage.textContent = message;
+            modal.classList.add('active');
+            modal.querySelector('button').focus();
+          }
         }
       });
     }
+
+    // Close modal
+    function closeModal() {
+      const modal = document.getElementById('confirmationModal');
+      if (modal) modal.classList.remove('active');
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
 
     // Footer year
     const yEl = document.getElementById('y');
     if (yEl) yEl.textContent = new Date().getFullYear();
 
-    // Parallax background (rAF throttled)
+    // Parallax background
     let ticking = false;
     window.addEventListener('scroll', () => {
       if (!ticking) {
@@ -853,7 +964,7 @@
       }
     }, { passive: true });
 
-    // Theme toggle (persist)
+    // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
       themeToggle.addEventListener('click', () => {
@@ -868,20 +979,37 @@
       }
     }
 
-    // News search (debounced)
+    // News search and filter
     const newsSearch = document.getElementById('newsSearch');
+    const filterButtons = $$('.news-filter button');
+    let activeFilter = 'all';
+
     if (newsSearch) {
       const doSearch = debounce((q) => {
         const s = q.trim().toLowerCase();
         $$('.news').forEach(article => {
-          const ok = s === '' || article.textContent.toLowerCase().includes(s);
-          article.style.display = ok ? '' : 'none';
+          const matchesSearch = s === '' || article.textContent.toLowerCase().includes(s);
+          const matchesFilter = activeFilter === 'all' || article.dataset.category === activeFilter;
+          article.style.display = matchesSearch && matchesFilter ? '' : 'none';
         });
       }, 300);
       newsSearch.addEventListener('input', (e) => doSearch(e.target.value || ''));
     }
 
-    // Hero parallax (guarded)
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.filter;
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        $$('.news').forEach(article => {
+          const matchesFilter = activeFilter === 'all' || article.dataset.category === activeFilter;
+          const matchesSearch = !newsSearch.value.trim() || article.textContent.toLowerCase().includes(newsSearch.value.trim().toLowerCase());
+          article.style.display = matchesFilter && matchesSearch ? '' : 'none';
+        });
+      });
+    });
+
+    // Hero parallax
     const heroIll = document.querySelector('.hero-ill');
     if (heroIll) {
       heroIll.addEventListener('mousemove', (e) => {
@@ -897,18 +1025,15 @@
       });
     }
 
-    // FullCalendar: lazy-load and initialize once
+    // FullCalendar
     (function initCalendar() {
       const calEl = document.getElementById('calendar');
       if (!calEl) return;
 
-      // Only load if FullCalendar not present
-      const src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js';
-      const localeSrc = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js';
-
       Promise.resolve().then(() => {
         if (window.FullCalendar && window.FullCalendar.Calendar) return;
-        return loadScript(src, { defer: true }).then(() => loadScript(localeSrc, { defer: true }));
+        return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js', { defer: true })
+          .then(() => loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js', { defer: true }));
       }).then(() => {
         if (!window.FullCalendar || !window.FullCalendar.Calendar) {
           throw new Error('FullCalendar did not expose expected API');
@@ -934,33 +1059,20 @@
           eventDidMount(info) {
             if (info.event.extendedProps && info.event.extendedProps.description) {
               info.el.setAttribute('aria-label', info.event.title + ': ' + info.event.extendedProps.description);
+              info.el.title = info.event.extendedProps.description; // Tooltip for hover
             }
+          },
+          eventClick(info) {
+            showModal(`${info.event.title}: ${info.event.extendedProps.description || 'Không có mô tả.'}`);
           }
         });
         calendar.render();
       }).catch((err) => {
-        // Show a simple fallback message in calendar container
         console.warn('[Calendar] init failed:', err);
         calEl.innerHTML = '<div class="card" style="padding:12px;border-radius:12px;">Không thể tải lịch. Vui lòng thử lại sau.</div>';
       });
     })();
-
-    // Chative messenger - non-blocking init with graceful fallback
-    function initChative() {
-      const src = 'https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js';
-      loadScript(src, { async: true }).catch(() => {
-        console.warn('[Messenger] failed to load');
-        const fb = document.getElementById('chatFallback');
-        if (fb) fb.classList.remove('hidden');
-      });
-    }
-    // Defer messenger load until user interacts or after a short delay
-    window.addEventListener('load', () => {
-      // load after small delay to avoid blocking main paint
-      setTimeout(initChative, 1200);
-      // also allow explicit lazy trigger from page
-      window.__lazyLoadChat = initChative;
-    });
-
   })();
   </script>
+</body>
+</html>
