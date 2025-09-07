@@ -20,427 +20,211 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0b0f19;
-      --card: #12192b;
-      --muted: #93a4c3;
-      --text: #eaf1ff;
-      --accent: #4f9cff;
-      --accent-2: #9b8cff;
-      --warning: #ffd166;
-      --success: #00e6a8;
-      --danger: #ff6b6b;
-      --radius: 20px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --glass: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    :root{
+      --bg:#0b0f19; --card:#12192b; --muted:#93a4c3; --text:#eaf1ff;
+      --accent:#4f9cff; --accent-2:#9b8cff; --success:#00e6a8; --danger:#ff6b6b;
+      --radius:20px; --shadow:0 10px 30px rgba(0,0,0,.28); --glass:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
     }
-    :root.light {
-      --bg: #f5f7fa;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --text: #1f2937;
-      --accent: #2563eb;
-      --accent-2: #7c3aed;
+    :root.light{
+      --bg:#f5f7fa; --card:#fff; --muted:#6b7280; --text:#1f2937; --accent:#2563eb; --accent-2:#7c3aed;
     }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: "Be Vietnam Pro", system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
-      color: var(--text);
-      background: radial-gradient(1200px 600px at 10% -10%, rgba(79,156,255,.25), transparent 40%),
-                  radial-gradient(900px 500px at 110% 10%, rgba(155,140,255,.22), transparent 55%),
-                  radial-gradient(800px 500px at 50% 120%, rgba(0,230,168,.12), transparent 50%),
-                  var(--bg);
-      line-height: 1.6;
+
+    /* Reset & base */
+    *,*::before,*::after{box-sizing:border-box}
+    html{font-family:"Be Vietnam Pro",system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;font-size:16px;line-height:1.5}
+    body{margin:0;color:var(--text);background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(79,156,255,.18), transparent 40%),
+      radial-gradient(900px 500px at 110% 10%, rgba(155,140,255,.14), transparent 55%),
+      var(--bg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1200px,92vw);margin-inline:auto}
+
+    /* Header / Nav */
+    header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(120%) blur(10px);background:linear-gradient(180deg, rgba(10,14,24,.78), rgba(10,14,24,.45));border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav{display:flex;align-items:center;gap:18px;padding:12px 0}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800}
+    .brand .logo{width:40px;height:40px;border-radius:12px;background:conic-gradient(from 180deg,var(--accent),var(--accent-2),var(--success));box-shadow:0 6px 14px rgba(79,156,255,.22);flex:0 0 40px}
+    nav a{opacity:.95;padding:8px 12px;border-radius:12px;transition:background .18s,transform .12s}
+    nav a:hover,nav a:focus{background:rgba(255,255,255,.04);outline:none;transform:translateY(-1px)}
+
+    /* CTA */
+    .cta{display:inline-flex;align-items:center;gap:8px;background:var(--glass);border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;transition:transform .18s}
+    .cta:focus,.cta:hover{transform:translateY(-2px);outline:none}
+
+    /* Mobile nav */
+    .mobile-nav{position:fixed;top:0;right:-100%;height:100%;width:280px;background:var(--card);padding:20px;display:flex;flex-direction:column;gap:12px;transition:right .28s ease;z-index:100}
+    .mobile-nav.active{right:0}
+    .mobile-nav a{padding:12px;border-radius:10px}
+    .mobile-nav a:focus,.mobile-nav a:hover{background:var(--accent);color:var(--card);outline:none}
+    .mobile-nav .close-btn{align-self:flex-end;padding:8px 10px;background:var(--danger);border-radius:10px;color:var(--card);cursor:pointer;border:none}
+
+    /* Ticker */
+    .ticker{background:linear-gradient(90deg, rgba(79,156,255,.12), rgba(155,140,255,.12));border-block:1px solid rgba(255,255,255,.04);overflow:hidden}
+    .ticker-inner{display:flex;gap:28px;white-space:nowrap;padding:8px 0;animation:marquee 20s linear infinite}
+    .ticker-inner:hover{animation-play-state:paused}
+    .ticker .tag{display:inline-block;margin-right:10px;padding:2px 8px;border-radius:999px;background:rgba(0,230,168,.12);color:var(--success);font-weight:700;font-size:12px;border:1px solid rgba(0,230,168,.24)}
+    @keyframes marquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+
+    /* Hero */
+    .hero{padding:56px 0 80px}
+    .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px dashed rgba(255,255,255,.08);font-size:13px;opacity:.95}
+    .h1{font-size:clamp(28px,3.6vw,44px);margin:14px 0 12px;line-height:1.05}
+    .lead{font-size:clamp(14px,1.6vw,18px);color:var(--muted)}
+
+    /* Cards / Stats */
+    .hero-card,.card{background:var(--glass);border:1px solid rgba(255,255,255,.08);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .22s}
+    .hero-card:hover,.card:hover{transform:translateY(-4px)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .stat{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);padding:12px;border-radius:12px;text-align:center;transition:transform .18s}
+    .stat b{display:block;font-size:20px}
+    .stat:hover{transform:scale(1.03)}
+
+    /* Hero illustration */
+    .hero-ill{height:320px;border-radius:var(--radius);position:relative;overflow:hidden;background:radial-gradient(650px 220px at 50% -20%, rgba(79,156,255,.24), transparent)}
+    .orbit{position:absolute;inset:0;pointer-events:none}
+    .orb{position:absolute;border-radius:50%;filter:blur(8px);opacity:.85;transition:transform .22s}
+    .orb.blue{background:radial-gradient(circle at 30% 30%, rgba(79,156,255,.9), rgba(79,156,255,.04));width:110px;height:110px;left:8%;top:16%}
+    .orb.purple{background:radial-gradient(circle at 30% 30%, rgba(155,140,255,.88), rgba(155,140,255,.04));width:150px;height:150px;right:12%;top:8%}
+    .orb.green{background:radial-gradient(circle at 30% 30%, rgba(0,230,168,.9), rgba(0,230,168,.04));width:110px;height:110px;left:36%;bottom:8%}
+
+    /* Sections / layout */
+    section{padding:48px 0}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}
+    .section-title h2{margin:0;font-size:1.25rem}
+    .section-title p{margin:0;color:var(--muted)}
+    .grid{display:grid;gap:14px}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+
+    /* News / gallery */
+    .news img{width:100%;height:160px;object-fit:cover;display:block}
+    .news h3{margin:8px 0 6px;font-size:1.05rem}
+    .news p{margin:0;color:var(--muted)}
+    .gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .gallery img{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+
+    /* Admissions / forms */
+    .admissions{display:grid;grid-template-columns:1fr .95fr;gap:20px;align-items:center}
+    .step{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px}
+    .step .num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(79,156,255,.12);border:1px solid rgba(79,156,255,.28);font-weight:700}
+
+    /* Timeline / calendar */
+    .timeline{display:grid;gap:12px}
+    .tl-item{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start}
+    .tl-item .bubble{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px}
+    #calendar{max-width:900px;margin:18px auto}
+
+    /* Footer */
+    footer{padding:36px 0 60px;background:linear-gradient(180deg, rgba(10,14,24,.8), rgba(10,14,24,.9));border-top:1px solid rgba(255,255,255,.06)}
+    .cols{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px}
+    .copy{margin-top:14px;color:var(--muted);font-size:14px}
+
+    /* Utility */
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+    .chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+
+    /* Accessibility & perf */
+    :root{--reduced-motion:0}
+    @media (prefers-reduced-motion:reduce){*{animation-duration:0.001ms!important;transition-duration:0.001ms!important;scroll-behavior:auto} :root{--reduced-motion:1}}
+    @media (max-width:980px){
+      .hero .wrap,.admissions{grid-template-columns:1fr}
+      .grid-3{grid-template-columns:1fr}
+      .grid-4{grid-template-columns:1fr 1fr}
+      .gallery{grid-template-columns:repeat(3,1fr)}
+      .cols{grid-template-columns:1fr 1fr}
+      nav{display:none}
+      .mobile{display:initial}
     }
-    a { color: inherit; text-decoration: none; }
-    .container { width: min(1200px, 92vw); margin-inline: auto; }
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      backdrop-filter: saturate(120%) blur(12px);
-      background: linear-gradient(180deg, rgba(10,14,24,.8), rgba(10,14,24,.45));
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .nav { display: flex; align-items: center; gap: 18px; padding: 12px 0; }
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .3px; }
-    .brand .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
-      background: conic-gradient(from 180deg, var(--accent), var(--accent-2), var(--success), var(--accent));
-      box-shadow: 0 6px 18px rgba(79,156,255,.35);
-      flex: 0 0 40px;
-    }
-    .brand .title { font-size: 18px; line-height: 1.1; }
-    nav a { opacity: .9; padding: 10px 12px; border-radius: 14px; transition: all .3s; }
-    nav a:hover, nav a:focus { background: rgba(255,255,255,.06); opacity: 1; outline: none; }
-    .nav .grow { flex: 1; }
-    .cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,.14);
-      padding: 10px 14px;
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      transition: transform .2s;
-    }
-    .cta:hover, .cta:focus { transform: translateY(-2px); outline: none; }
-    .mobile-nav {
-      position: fixed;
-      top: 0;
-      right: -100%;
-      height: 100%;
-      width: 260px;
-      background: var(--card);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: right 0.3s ease;
-      z-index: 100;
-    }
-    .mobile-nav.active { right: 0; }
-    .mobile-nav a { padding: 12px; border-radius: 12px; font-size: 16px; transition: background .3s; }
-    .mobile-nav a:hover, .mobile-nav a:focus { background: var(--accent); color: var(--card); outline: none; }
-    .mobile-nav .close-btn {
-      align-self: flex-end;
-      padding: 10px;
-      background: var(--danger);
-      border-radius: 10px;
-      color: var(--card);
-      cursor: pointer;
-    }
-    .ticker {
-      background: linear-gradient(90deg, rgba(79,156,255,.25), rgba(155,140,255,.25));
-      border-block: 1px solid rgba(255,255,255,.08);
-    }
-    .ticker-inner { display: flex; gap: 24px; overflow: hidden; white-space: nowrap; }
-    .ticker-inner p { display: inline-block; padding: 10px 0; animation: marquee 18s linear infinite; }
-    .ticker .tag {
-      display: inline-block;
-      margin-right: 10px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(0,230,168,.16);
-      color: var(--success);
-      font-weight: 700;
-      font-size: 12px;
-      border: 1px solid rgba(0,230,168,.35);
-    }
-    @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-    .hero { position: relative; padding: 60px 0 80px; }
-    .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px dashed rgba(255,255,255,.25);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      opacity: .9;
-    }
-    .h1 { font-size: 44px; line-height: 1.1; margin: 14px 0 12px; letter-spacing: .2px; }
-    .lead { font-size: 18px; color: var(--muted); }
-    .hero-card {
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,.15);
-      padding: 18px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      transition: transform .3s;
-    }
-    .hero-card:hover { transform: translateY(-4px); }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
-    .stat {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
-      padding: 16px;
-      border-radius: 16px;
-      text-align: center;
-      transition: transform .3s;
-    }
-    .stat:hover { transform: scale(1.05); }
-    .stat b { display: block; font-size: 24px; }
-    .hero-ill {
-      height: 360px;
-      border-radius: var(--radius);
-      position: relative;
-      overflow: hidden;
-      background: radial-gradient(650px 220px at 50% -20%, rgba(79,156,255,.35), transparent),
-                  linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.1);
-      box-shadow: var(--shadow);
-    }
-    .orbit { position: absolute; inset: 0; opacity: .9; }
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(8px);
-      opacity: .8;
-      animation: f 14s linear infinite;
-      transition: transform .3s;
-    }
-    .orb.blue {
-      background: radial-gradient(circle at 30% 30%, rgba(79,156,255,.9), rgba(79,156,255,.05));
-      width: 120px;
-      height: 120px;
-      left: 10%;
-      top: 18%;
-    }
-    .orb.purple {
-      background: radial-gradient(circle at 30% 30%, rgba(155,140,255,.9), rgba(155,140,255,.05));
-      width: 160px;
-      height: 160px;
-      right: 14%;
-      top: 10%;
-      animation-duration: 18s;
-    }
-    .orb.green {
-      background: radial-gradient(circle at 30% 30%, rgba(0,230,168,.9), rgba(0,230,168,.05));
-      width: 120px;
-      height: 120px;
-      left: 38%;
-      bottom: 10%;
-      animation-duration: 20s;
-    }
-    @keyframes f { 0% { transform: translate(0,0); } 50% { transform: translate(12px,-10px); } 100% { transform: translate(0,0); } }
-    section { padding: 50px 0; }
-    .section-title { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
-    .section-title h2 { margin: 0; font-size: 28px; }
-    .section-title p { margin: 0; color: var(--muted); }
-    .grid { display: grid; gap: 16px; }
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid-4 { grid-template-columns: repeat(4, 1fr); }
-    .card {
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: transform .3s;
-    }
-    .card:hover { transform: translateY(-4px); }
-    .card .p { padding: 16px; }
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.04);
-    }
-    .news img { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .news h3 { margin: 8px 0 6px; font-size: 18px; }
-    .news p { margin: 0; color: var(--muted); }
-    .admissions { display: grid; grid-template-columns: 1fr .9fr; gap: 20px; align-items: center; }
-    .admissions .steps { display: grid; gap: 12px; }
-    .step {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .step .num {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      background: rgba(79,156,255,.18);
-      border: 1px solid rgba(79,156,255,.4);
-      font-weight: 700;
-    }
-    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.06);
-      cursor: pointer;
-      transition: all .3s;
-    }
-    .btn:hover, .btn:focus { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79,156,255,.2); outline: none; }
-    .btn.primary {
-      background: linear-gradient(90deg, rgba(79,156,255,.5), rgba(155,140,255,.5));
-      border-color: transparent;
-      box-shadow: 0 8px 22px rgba(79,156,255,.35);
-    }
-    .btn.success { background: rgba(0,230,168,.18); border-color: rgba(0,230,168,.5); }
-    .gallery { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
-    .gallery img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); }
-    .timeline { display: grid; gap: 12px; }
-    .tl-item { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: start; }
-    .tl-item .time { font-weight: 700; opacity: .9; }
-    .tl-item .bubble { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 12px; }
-    footer {
-      padding: 36px 0 60px;
-      background: linear-gradient(180deg, rgba(10,14,24,.8), rgba(10,14,24,.9));
-      border-top: 1px solid rgba(255,255,255,.08);
-    }
-    .cols { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 20px; }
-    .cols h4 { margin: 0 0 10px; }
-    .cols ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-    .copy { margin-top: 18px; color: var(--muted); font-size: 14px; }
-    .muted { color: var(--muted); }
-    .hidden { display: none; }
-    #calendar { max-width: 900px; margin: 20px auto; }
-    .fc { --fc-border-color: rgba(255,255,255,.1); --fc-daygrid-event-dot-color: var(--accent); }
-    .fc-theme-standard .fc-scrollgrid { background: var(--card); }
-    .fc-theme-standard th { background: var(--glass); border-color: rgba(255,255,255,.1); }
-    .fc-theme-standard td { border-color: rgba(255,255,255,.1); }
-    .fc .fc-daygrid-day-number { color: var(--text); }
-    .fc .fc-col-header-cell-cushion { color: var(--text); }
-    .fc .fc-event { background: var(--accent); border-color: var(--accent); color: var(--card); }
-    .error-message { 
-      background: rgba(255,75,75,.2);
-      border: 1px solid var(--danger);
-      padding: 10px;
-      border-radius: 10px;
-      color: var(--danger);
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    input:focus, textarea:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
-    @media (max-width: 980px) {
-      .hero .wrap, .admissions { grid-template-columns: 1fr; }
-      .grid-3 { grid-template-columns: 1fr; }
-      .grid-4 { grid-template-columns: 1fr 1fr; }
-      .gallery { grid-template-columns: repeat(3, 1fr); }
-      .cols { grid-template-columns: 1fr 1fr; }
-      .mobile { display: initial; }
-      nav { display: none; }
-    }
+
+    /* Compact overrides for added blocks */
+    #teacher-reviews,#about-school{padding:1.5rem;background:var(--card);border-radius:12px;margin:1.5rem auto;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    .reviews-container{display:grid;gap:1rem}
+    .review-card{padding:1rem;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,.04)}
+    .review-card .stars{color:gold;font-size:1.1rem}
+    #reviewForm{display:flex;flex-direction:column;gap:.5rem}
+    #reviewForm input,#reviewForm select,#reviewForm textarea{padding:.6rem;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--text)}
+    #reviewForm button{background:var(--accent);color:#fff;padding:.7rem;border:none;border-radius:8px;cursor:pointer}
+    .error-message{background:rgba(255,75,75,.08);border:1px solid var(--danger);padding:10px;border-radius:8px;color:var(--danger);font-size:14px}
+
+    /* FullCalendar theme hooks */
+    .fc{--fc-border-color:rgba(255,255,255,.08);--fc-event-bg:var(--accent)}
+    .fc-theme-standard .fc-scrollgrid{background:var(--card)}
+    .fc .fc-daygrid-event{background:var(--accent);border-color:var(--accent);color:var(--card)}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js" defer></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous" defer></script>
-  <style>
-    #teacher-reviews {
-  padding: 2rem;
-  background: var(--card);
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  margin: 2rem auto;
-  max-width: 800px;
-}
 
-.reviews-container {
-  display: grid;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
+  <!-- Lazy-load JS for heavier libs only when needed (calendar or chat) -->
+  <script>
+    (function(){
+      var loaded = {};
+      function loadScript(src, opts){
+        if(loaded[src]) return loaded[src];
+        loaded[src] = new Promise(function(resolve, reject){
+          var s = document.createElement('script');
+          s.src = src;
+          if(opts && opts.defer) s.defer = true;
+          if(opts && opts.async) s.async = true;
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        return loaded[src];
+      }
 
-.review-card {
-  padding: 1rem;
-  border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #ddd;
-}
+      function loadIfCalendarVisible(){
+        if(!document.getElementById('calendar')) return Promise.resolve();
+        // load FullCalendar only when user interacts / sees calendar
+        return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js', {defer:true})
+          .then(function(){ return loadScript('https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js', {defer:true}); })
+          .catch(function(e){ console.warn('FullCalendar failed to load', e); });
+      }
 
-.review-card .stars {
-  font-size: 1.2rem;
-  color: gold;
-}
-#reviewForm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-#reviewForm input, 
-#reviewForm select, 
-#reviewForm textarea {
-  padding: 0.6rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-#reviewForm button {
-  background: var(--accent);
-  color: white;
-  padding: 0.8rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-#reviewForm button:hover {
-  opacity: 0.9;
-}
+      // intersection observer for calendar
+      document.addEventListener('DOMContentLoaded', function(){
+        var calEl = document.getElementById('calendar');
+        if(!calEl) return;
+        if('IntersectionObserver' in window){
+          var io = new IntersectionObserver(function(entries, obs){
+            entries.forEach(function(ent){
+              if(ent.isIntersecting){
+                loadIfCalendarVisible();
+                obs.disconnect();
+              }
+            });
+          }, {rootMargin:'300px'});
+          io.observe(calEl);
+        } else {
+          // fallback: load after short delay
+          setTimeout(loadIfCalendarVisible, 1200);
+        }
+      });
 
-  </style>
-  <style>
-    #about-school {
-  padding: 2rem;
-  background: var(--card);
-  border-radius: 16px;
-  margin: 2rem auto;
-  max-width: 1000px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
+      // Provide a safe helper to load chat when requested (avoid blocking head)
+      window.__lazyLoadChat = function(){
+        return loadScript('https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js', {async:true})
+          .catch(function(){ document.getElementById && document.getElementById('chatFallback') && document.getElementById('chatFallback').classList.remove('hidden'); });
+      };
+    })();
+  </script>
 
-.about-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.school-img {
-  flex: 1 1 300px;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.about-text {
-  flex: 2 1 400px;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-  </style>
   <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "Trường THCS Đoàn Kết",
-      "description": "Trường THCS Đoàn Kết tại Ia Chim, Quảng Ngãi, cung cấp môi trường học tập kỷ cương, thân thiện, và sáng tạo.",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Ia Chim",
-        "addressRegion": "Quảng Ngãi",
-        "streetAddress": "Thôn 5, xã Đoàn Kết",
-        "postalCode": "570000"
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+84-34-870-7829",
-        "contactType": "Văn phòng",
-        "email": "giabaotranle56@gmail.com",
-        "availableLanguage": ["Vietnamese"]
-      },
-      "url": "https://yourdomain.com",
-      "sameAs": [
-        "https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN",
-        "https://www.youtube.com/",
-        "https://zalo.me/0348707829"
-      ]
-    }
+  {
+    "@context":"https://schema.org",
+    "@type":"EducationalOrganization",
+    "name":"Trường THCS Đoàn Kết",
+    "description":"Trường THCS Đoàn Kết tại Ia Chim, Quảng Ngãi — môi trường học tập kỷ cương, thân thiện và sáng tạo.",
+    "url":"https://yourdomain.com",
+    "logo":"https://yourdomain.com/logo.webp",
+    "address":{"@type":"PostalAddress","streetAddress":"Thôn 5, xã Đoàn Kết","addressLocality":"Ia Chim","addressRegion":"Quảng Ngãi","postalCode":"570000"},
+    "contactPoint":[{"@type":"ContactPoint","telephone":"+84-34-870-7829","contactType":"Văn phòng","email":"giabaotranle56@gmail.com","availableLanguage":["Vietnamese"]}],
+    "sameAs":["https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN","https://www.youtube.com/","https://zalo.me/0348707829"]
+  }
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#main" style="position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden">Bỏ qua sang nội dung chính</a>
+
   <!-- HEADER -->
   <header>
     <div class="container nav">
@@ -451,7 +235,7 @@
           <small class="muted">Cổng thông tin điện tử (VIP)</small>
         </div>
       </div>
-      <div class="grow"></div>
+
       <nav aria-label="Điều hướng chính">
         <a href="#gioithieu">Giới thiệu</a>
         <a href="#tintuc">Tin tức</a>
@@ -460,6 +244,7 @@
         <a href="#lich">Lịch</a>
         <a href="#lienhe">Liên hệ</a>
       </nav>
+
       <nav class="mobile-nav hidden" id="mobileNav" aria-label="Điều hướng di động">
         <button class="close-btn" id="closeMenu" aria-label="Đóng menu">✕ Đóng</button>
         <a href="#gioithieu">Giới thiệu</a>
@@ -469,16 +254,19 @@
         <a href="#lich">Lịch</a>
         <a href="#lienhe">Liên hệ</a>
       </nav>
-      <a class="cta" href="#tuyensinh" aria-label="Đăng ký tuyển sinh">Đăng ký tuyển sinh</a>
-      <button class="cta" id="themeToggle" aria-label="Chuyển đổi giao diện">🌙</button>
-      <button class="cta mobile" id="btnMenu" aria-label="Mở menu">☰</button>
+
+      <div style="display:flex;align-items:center;gap:10px">
+        <a class="cta" href="#tuyensinh" aria-label="Đăng ký tuyển sinh">Đăng ký tuyển sinh</a>
+        <button class="cta" id="themeToggle" aria-label="Chuyển đổi giao diện">🌙</button>
+        <button class="cta mobile" id="btnMenu" aria-label="Mở menu">☰</button>
+      </div>
     </div>
   </header>
 
   <!-- TICKER -->
-  <div class="ticker" role="marquee">
+  <div class="ticker" role="region" aria-label="Thông báo nhanh">
     <div class="container">
-      <div class="ticker-inner">
+      <div class="ticker-inner" aria-hidden="false">
         <p><span class="tag">THÔNG BÁO</span> Khai giảng năm học mới dự kiến 05/09 — Phụ huynh theo dõi lịch nhập học.</p>
         <p><span class="tag">TUYỂN SINH</span> Mở nhận hồ sơ trực tuyến lớp 6, 9 — Ưu tiên nộp sớm.</p>
         <p><span class="tag">VINH DANH</span> 12 học sinh đạt giải cấp tỉnh môn Toán, Lý, Hóa.</p>
@@ -487,334 +275,371 @@
     </div>
   </div>
 
-  <!-- HERO -->
-  <section class="hero" id="gioithieu" aria-labelledby="hero-title">
-    <div class="container wrap">
-      <div>
-        <span class="badge">🏫 Trường THCS Đoàn Kết— Ia Chim, Quảng Ngãi</span>
-        <h1 class="h1" id="hero-title">Ngôi trường của sự <span style="background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent">tận tâm</span> & đổi mới</h1>
-        <p class="lead">Môi trường học tập kỷ cương, thân thiện, lấy học sinh làm trung tâm. Giao diện VIP, tải nhanh, tối ưu di động, dễ cập nhật nội dung.</p>
-        <div class="hero-card">
-          <div class="cta-row">
-            <a class="btn primary" href="#tuyensinh" aria-label="Nộp hồ sơ trực tuyến">Nộp hồ sơ trực tuyến</a>
-            <a class="btn" href="#tintuc" aria-label="Xem tin mới">Xem tin mới</a>
-            <a class="btn success" href="#lienhe" aria-label="Liên hệ Văn phòng">Liên hệ Văn phòng</a>
-          </div>
-          <div class="stats" role="list" aria-label="Số liệu nhà trường" style="margin-top:1rem; gap:12px;">
-            <div class="stat" role="listitem" aria-hidden="false">
-              <b id="st1" aria-live="polite">0</b>
-              <small>Học sinh</small>
+  <main id="main" role="main">
+
+    <!-- HERO -->
+    <section class="hero" id="gioithieu" aria-labelledby="hero-title">
+      <div class="container wrap">
+        <div>
+          <span class="badge">🏫 Trường THCS Đoàn Kết— Ia Chim, Quảng Ngãi</span>
+          <h1 class="h1" id="hero-title">Ngôi trường của sự
+            <span style="background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent">
+              tận tâm
+            </span> & đổi mới
+          </h1>
+          <p class="lead">Môi trường học tập kỷ cương, thân thiện, lấy học sinh làm trung tâm. Giao diện tải nhanh, tối ưu di động, dễ cập nhật nội dung.</p>
+
+          <div class="hero-card" style="margin-top:12px;">
+            <div class="cta-row" style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="btn primary" onclick="document.getElementById('applyForm').scrollIntoView({behavior:'smooth'})" aria-label="Nộp hồ sơ trực tuyến">Nộp hồ sơ trực tuyến</button>
+              <a class="btn" href="#tintuc" aria-label="Xem tin mới">Xem tin mới</a>
+              <a class="btn success" href="#lienhe" aria-label="Liên hệ Văn phòng">Liên hệ Văn phòng</a>
             </div>
-            <div class="stat" role="listitem" aria-hidden="false">
-              <b id="st2" aria-live="polite">0</b>
-              <small>Giáo viên</small>
+
+            <div class="stats" role="list" aria-label="Số liệu nhà trường" style="margin-top:1rem; gap:12px;">
+              <div class="stat" role="listitem">
+                <b id="st1" aria-live="polite">0</b>
+                <small>Học sinh</small>
+              </div>
+              <div class="stat" role="listitem">
+                <b id="st2" aria-live="polite">0</b>
+                <small>Giáo viên</small>
+              </div>
+              <div class="stat" role="listitem">
+                <b id="st3" aria-live="polite">0</b>
+                <small>Phòng học</small>
+              </div>
+              <div class="stat" role="listitem">
+                <strong style="font-size:1.2rem;color:var(--accent)">2005</strong>
+                <small>Thành lập</small>
+              </div>
             </div>
-            <div class="stat" role="listitem" aria-hidden="false">
-              <b id="st3" aria-live="polite">0</b>
-              <small>Phòng học</small>
-            </div>
-            <div class="stat" role="listitem" aria-hidden="false">
-              <strong style="font-size:1.2rem;color:var(--accent)">2005</strong>
-              <small>Thành lập</small>
-            </div>
-          </div>
-</style>
           </div>
         </div>
+
+        <aside class="hero-ill" aria-hidden="true">
+          <div class="orbit">
+            <div class="orb blue"></div>
+            <div class="orb purple"></div>
+            <div class="orb green"></div>
+          </div>
+        </aside>
       </div>
-      <div class="hero-ill" aria-hidden="true">
-        <div class="orbit">
-          <div class="orb blue" style="animation-delay:0s"></div>
-          <div class="orb purple" style="animation-delay:1s"></div>
-          <div class="orb green" style="animation-delay:2s"></div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Giới thiệu Trường (nâng cấp giao diện) -->
-  <section id="about-school" aria-labelledby="about-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="about-title">Giới thiệu Trường</h2>
-        <p class="muted">Tầm nhìn, sứ mệnh và một vài con số tiêu biểu</p>
-      </div>
-
-      <article class="card about-container" role="region" aria-label="Giới thiệu Trường THCS Đoàn Kết">
-        <picture class="school-img" style="flex:1 1 360px;max-width:420px;overflow:hidden;border-radius:12px;">
-          <source srcset="truong-large.jpg 1200w, truong.jpg 800w" sizes="(min-width:980px) 420px, 100vw">
-          <img src="https://lh3.googleusercontent.com/gps-cs-s/AC9h4nq6x1iBKvnb-u7hm8-bfZyrqZfVzuC9hF2Oq4gwIiS3eIfaafUqaa2ePIg3Awh0d4BNDDdpw8zLigArarW5gHDvNeyBxRZxKbFrAOy0bDzwyqOdvwDKvEZOqTPFUu2KJxdcIx5eGA=s680-w680-h510-rw" alt="Toàn cảnh Trường THCS Đoàn Kết" loading="lazy" decoding="async" style="width:100%;height:auto;display:block;">
-        </picture>
-
-        <div class="p" style="flex:2 1 520px;min-width:260px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <span class="chip" style="background:rgba(79,156,255,.08);border-color:rgba(79,156,255,.22)">🏫 Trường THCS Đoàn Kết</span>
-            <small class="muted">Ia Chim — Quảng Ngãi</small>
-          </div>
-
-          <h3 style="margin-top:0;margin-bottom:8px">Ngôi trường của truyền thống và đổi mới</h3>
-
-          <p class="muted" style="margin-bottom:12px;line-height:1.6">
-            Trường THCS Đoàn Kết có bề dày truyền thống, luôn nỗ lực nâng cao chất lượng dạy và học.
-            Nhà trường từng bước cải tạo cơ sở vật chất, cập nhật phương pháp giảng dạy hiện đại,
-            đồng thời giữ gìn giá trị văn hoá trường học.
-          </p>
-
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
-              <small class="muted">Học sinh</small>
-              <b aria-live="polite">~272</b>
-            </div>
-            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
-              <small class="muted">Giáo viên</small>
-              <b aria-live="polite">~19</b>
-            </div>
-            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
-              <small class="muted">Phòng học</small>
-              <b aria-live="polite">~11</b>
-            </div>
-            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
-              <small class="muted">Thành lập</small>
-              <b style="color:var(--accent)">2005</b>
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-            <div>
-              <h4 style="margin:0 0 6px;font-size:15px">Sứ mệnh</h4>
-              <p class="muted" style="margin:0;font-size:14px">Giáo dục toàn diện, phát huy năng lực và phẩm chất học sinh.</p>
-            </div>
-            <div>
-              <h4 style="margin:0 0 6px;font-size:15px">Tầm nhìn</h4>
-              <p class="muted" style="margin:0;font-size:14px">Trở thành môi trường học tập thân thiện, sáng tạo trong khu vực.</p>
-            </div>
-          </div>
-
-          <ul style="margin:0 0 14px 18px;color:var(--muted);line-height:1.5">
-            <li>Tập trung nâng cấp phòng học và thư viện.</li>
-            <li>Đào tạo đội ngũ giáo viên đổi mới phương pháp giảng dạy.</li>
-            <li>Khuyến khích hoạt động ngoại khoá, STEM và sáng tạo.</li>
-          </ul>
-
-          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
-            <a class="btn primary" href="#tintuc" aria-label="Xem tin tức trường">Xem hoạt động</a>
-            <a class="btn" href="#lienhe" aria-label="Liên hệ nhà trường">Liên hệ ngay</a>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <!-- TIN TỨC -->
-  <section id="tintuc" aria-labelledby="news-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="news-title">Tin tức & Thông báo</h2>
-        <input type="search" id="newsSearch" placeholder="Tìm kiếm tin tức..." aria-label="Tìm kiếm tin tức" style="padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:var(--text)">
-      </div>
-      <div role="note" aria-live="polite" style="margin-top:12px;">
-        <article class="card" style="display:inline-block; padding:10px 14px; border-radius:12px;">
-          <div class="p">
-        <span class="chip" itemprop="startDate" content="2025-09-06T07:00:00+07:00">06/09/2025 • 07:00</span>
-        <h3 style="margin:8px 0 4px">Khảo sát / kiểm tra Toán &amp; Tiếng Anh &amp; Ngữ Văn</h3>
-        <p class="muted" style="margin:0">Bắt đầu lúc 07:00 — Mỗi 1 môn  có thời lượng 45 phút.</p>
-          </div>
-        </article>
-      </div></div>
-      <div class="grid grid-3">
-        <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
-          <img src="http://placehold.it/400x160?text=Khai+giang" alt="Hình ảnh lễ khai giảng" loading="lazy" decoding="async" itemprop="image" />
-          <div class="p">
-            <span class="chip" itemprop="datePublished" content="2025-09-05">05/09,06/09</span>
-            <h3 itemprop="headline">Lễ khai giảng năm học 2025–2026</h3>
-            <p itemprop="description">Chuẩn bị đồng phục, nề nếp xếp hàng, thời gian có mặt 6:45 sáng tại sân trường.</p>
-          </div>
-        </article>
-        <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
-          <img src="https://quickshare.samsungcloud.com/ls/public/v1/links/1756909598475LcxRC3h/contents/03c57fb188d211f085e34aeb037a28a2/resized/1280?signature=KBNoHMgUK6vfyaIajYqss8v8IObbKY2LR_eDRbY0UEiPcoo5QbkDmxJ8XrYAxzkP4Q34IKd_xmeARGWrKEtlifY40Vh3t-ZSxVSr9PkuxscL3bo3IcWb8mOYUJYXL0Ltx1XCOMWE_H8eAj4jBiXBxQ&storageType=file" alt="Hình ảnh vinh danh học sinh" loading="lazy" decoding="async" itemprop="image" />
-          <div class="p">
-            <span class="chip" itemprop="datePublished" content="2025-08-20">20/08</span>
-            <h3 itemprop="headline">Vinh danh học sinh đạt giải cấp tỉnh</h3>
-            <p itemprop="description">Chưa có thông tin.</p>
-          </div>
-        </article>
-        <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
-          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39245/fck/files/IMG_1897.jpeg" alt="Hình ảnh ngày hội STEM" loading="lazy" decoding="async" itemprop="image" />
-          <div class="p">
-            <span class="chip" itemprop="datePublished" content="2025-08-15">15/08</span>
-            <h3 itemprop="headline">Ngày hội STEM – Sáng tạo không giới hạn</h3>
-            <p itemprop="description">Học sinh trưng bày các dự án robot, IoT và sản phẩm khoa học sáng tạo.</p>
-          </div>
-        </article>
-        <!-- Tin tức mới thêm -->
-        <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
-          <img src="http://placehold.it/400x160?text=Tong+ket" alt="Hình ảnh tổng kết năm học" loading="lazy" decoding="async" itemprop="image" />
-          <div class="p">
-            <span class="chip" itemprop="datePublished" content="2025-05-27">27/05</span>
-            <h3 itemprop="headline">Tổng kết phát thưởng năm học 2024-2025</h3>
-            <p itemprop="description">Trường tổ chức lễ tổng kết và khen thưởng học sinh, giáo viên có thành tích xuất sắc trong năm học.</p>
-          </div>
-        </article>
-        <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
-          <img src="http://placehold.it/400x160?text=Thi+dua" alt="Hình ảnh đại hội thi đua" loading="lazy" decoding="async" itemprop="image" />
-          <div class="p">
-            <span class="chip" itemprop="datePublished" content="2025-08-25">25/08</span>
-            <h3 itemprop="headline">Đoàn kết, đổi mới, sáng tạo, thi đua xây dựng Quảng Ngãi</h3>
-            <p itemprop="description">Đại hội Thi đua yêu nước tỉnh Quảng Ngãi lần thứ I, giai đoạn 2025 - 2030 đã diễn ra thành công.</p>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-  <!-- Đánh giá giáo viên -->
-   <section id="teacher-reviews">
-  <h2>Đánh giá Giáo viên</h2>
-  <div class="reviews-container">
-    <div class="review-card">
-      <h3>Thầy Nguyễn Văn A</h3>
-      <p><strong>Môn:</strong> Toán</p>
-      <div class="stars">⭐⭐⭐⭐⭐</div>
-      <p class="comment">Thầy giảng dễ hiểu, ví dụ thực tế, học sinh rất thích.</p>
-    </div>
-
-    <div class="review-card">
-      <h3>Cô Trần Thị B</h3>
-      <p><strong>Môn:</strong> Văn</p>
-      <div class="stars">⭐⭐⭐⭐</div>
-            <p class="comment">Cô giảng nhiệt tình, nhưng tốc độ hơi nhanh.</p>
-    </div>
-  </div>
-
-  <!-- KHEN THƯỞNG (Phần mới thêm) -->
-  <section id="khenthuong" aria-labelledby="rewards-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="rewards-title">Khen thưởng & Thành tích</h2>
-        <p class="muted">Vinh danh học sinh, giáo viên xuất sắc năm học 2025-2026</p>
-      </div>
-      <div class="grid grid-3">
-        <article class="card">
-          <div class="p">
-            <h3>Học sinh giỏi cấp tỉnh</h3>
-            <p class="muted">Chưa có</p>
-            <ul>
-              <li>Chưa có - Chưa cón</li>
-              <li>Chưa có - Chưa có</li>
-              <li>Chưa có - Chưa có</li>
-            </ul>
-          </div>
-        </article>
-        <article class="card">
-          <div class="p">
-            <h3>Khen thưởng học sinh con cán bộ</h3>
-            <p class="muted">Chưa có thông tin</p>
-            <p>Nguồn: Bộ CHQS tỉnh Quảng Ngãi</p>
-          </div>
-        </article>
-        <article class="card">
-          <div class="p">
-            <h3>Khen thưởng từ Công ty Đường Quảng Ngãi</h3>
-            <p class="muted">Chưa có thông tin</p>
-            <p>chưa có thông tin</p>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- TUYỂN SINH -->
-  <section id="tuyensinh" aria-labelledby="admissions-title">
-    <div class="container admissions">
-      <div>
+    <!-- Giới thiệu Trường -->
+    <section id="about-school" aria-labelledby="about-title">
+      <div class="container">
         <div class="section-title">
-          <h2 id="admissions-title">Tuyển sinh trực tuyến</h2>
-          <p class="muted">Đơn giản trong 3 bước</p>
+          <h2 id="about-title">Giới thiệu Trường</h2>
+          <p class="muted">Tầm nhìn, sứ mệnh và một vài con số tiêu biểu</p>
         </div>
-        <div class="steps">
-          <div class="step"><div class="num">1</div><div>Điền thông tin học sinh & phụ huynh vào <b>biểu mẫu</b>.</div></div>
-          <div class="step"><div class="num">2</div><div>Tải lên ảnh/scan học bạ, giấy khai sinh (nếu có).</div></div>
-          <div class="step"><div class="num">3</div><div>Nhà trường liên hệ xác nhận trong vòng 3 ngày làm việc.</div></div>
+
+        <article class="card about-container" role="region" aria-label="Giới thiệu Trường THCS Đoàn Kết" style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+          <picture class="school-img" style="flex:1 1 320px;max-width:420px;overflow:hidden;border-radius:12px;">
+            <source srcset="truong-large.jpg 1200w, truong.jpg 800w" sizes="(min-width:980px) 420px, 100vw">
+            <img src="https://lh3.googleusercontent.com/gps-cs-s/AC9h4nq6x1iBKvnb-u7hm8-bfZyrqZfVzuC9hF2Oq4gwIiS3eIfaafUqaa2ePIg3Awh0d4BNDDdpw8zLigArarW5gHDvNeyBxRZxKbFrAOy0bDzwyqOdvwDKvEZOqTPFUu2KJxdcIx5eGA=s680-w680-h510-rw"
+                 alt="Toàn cảnh Trường THCS Đoàn Kết" loading="lazy" decoding="async" style="width:100%;height:auto;display:block;">
+          </picture>
+
+          <div style="flex:2 1 480px;min-width:260px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span class="chip" style="background:rgba(79,156,255,.08);border-color:rgba(79,156,255,.22)">🏫 Trường THCS Đoàn Kết</span>
+              <small class="muted">Ia Chim — Quảng Ngãi</small>
+            </div>
+
+            <h3 style="margin-top:0;margin-bottom:8px">Ngôi trường của truyền thống và đổi mới</h3>
+
+            <p class="muted" style="margin-bottom:12px;line-height:1.6">
+              Trường THCS Đoàn Kết có bề dày truyền thống, luôn nỗ lực nâng cao chất lượng dạy và học.
+              Nhà trường từng bước cải tạo cơ sở vật chất, cập nhật phương pháp giảng dạy hiện đại,
+              đồng thời giữ gìn giá trị văn hoá trường học.
+            </p>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+              <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+                <small class="muted">Học sinh</small>
+                <b aria-live="polite">~272</b>
+              </div>
+              <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+                <small class="muted">Giáo viên</small>
+                <b aria-live="polite">~19</b>
+              </div>
+              <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+                <small class="muted">Phòng học</small>
+                <b aria-live="polite">~11</b>
+              </div>
+              <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+                <small class="muted">Thành lập</small>
+                <b style="color:var(--accent)">2005</b>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+              <div>
+                <h4 style="margin:0 0 6px;font-size:15px">Sứ mệnh</h4>
+                <p class="muted" style="margin:0;font-size:14px">Giáo dục toàn diện, phát huy năng lực và phẩm chất học sinh.</p>
+              </div>
+              <div>
+                <h4 style="margin:0 0 6px;font-size:15px">Tầm nhìn</h4>
+                <p class="muted" style="margin:0;font-size:14px">Trở thành môi trường học tập thân thiện, sáng tạo trong khu vực.</p>
+              </div>
+            </div>
+
+            <ul style="margin:0 0 14px 18px;color:var(--muted);line-height:1.5">
+              <li>Tập trung nâng cấp phòng học và thư viện.</li>
+              <li>Đào tạo đội ngũ giáo viên đổi mới phương pháp giảng dạy.</li>
+              <li>Khuyến khích hoạt động ngoại khoá, STEM và sáng tạo.</li>
+            </ul>
+
+            <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+              <a class="btn primary" href="#tintuc" aria-label="Xem hoạt động trường">Xem hoạt động</a>
+              <a class="btn" href="#lienhe" aria-label="Liên hệ nhà trường">Liên hệ ngay</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- TIN TỨC -->
+    <section id="tintuc" aria-labelledby="news-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="news-title">Tin tức & Thông báo</h2>
+          <input type="search" id="newsSearch" placeholder="Tìm kiếm tin tức..." aria-label="Tìm kiếm tin tức" autocomplete="off" style="padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:var(--text)">
         </div>
-        <div class="cta-row" style="margin-top:12px">
-          <a class="btn primary" href="#form" onclick="openForm()" aria-label="Mở biểu mẫu đăng ký">Mở biểu mẫu</a>
-          <a class="btn" href="#quydinh" aria-label="Quy định tuyển sinh">Quy định tuyển sinh</a>
+
+        <div role="status" aria-live="polite" style="margin-top:12px;">
+          <article class="card" style="display:inline-block; padding:10px 14px; border-radius:12px;">
+            <div class="p">
+              <span class="chip" itemprop="startDate" content="2025-09-06T07:00:00+07:00">06/09/2025 • 07:00</span>
+              <h3 style="margin:8px 0 4px">Khảo sát / kiểm tra Toán &amp; Tiếng Anh &amp; Ngữ Văn</h3>
+              <p class="muted" style="margin:0">Bắt đầu lúc 07:00 — Mỗi 1 môn có thời lượng 45 phút.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="grid grid-3" style="margin-top:14px;">
+          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+            <img src="http://placehold.it/400x160?text=Khai+giang" alt="Hình ảnh lễ khai giảng" loading="lazy" decoding="async" itemprop="image" />
+            <div class="p">
+              <span class="chip" itemprop="datePublished" content="2025-09-05">05/09,06/09</span>
+              <h3 itemprop="headline">Lễ khai giảng năm học 2025–2026</h3>
+              <p itemprop="description">Chuẩn bị đồng phục, nề nếp xếp hàng, thời gian có mặt 6:45 sáng tại sân trường.</p>
+            </div>
+          </article>
+
+          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+            <img src="https://quickshare.samsungcloud.com/ls/public/v1/links/1756909598475LcxRC3h/contents/03c57fb188d211f085e34aeb037a28a2/resized/1280" alt="Hình ảnh vinh danh học sinh" loading="lazy" decoding="async" itemprop="image" />
+            <div class="p">
+              <span class="chip" itemprop="datePublished" content="2025-08-20">20/08</span>
+              <h3 itemprop="headline">Vinh danh học sinh đạt giải cấp tỉnh</h3>
+              <p itemprop="description">Danh sách và hình ảnh được cập nhật sớm.</p>
+            </div>
+          </article>
+
+          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+            <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39245/fck/files/IMG_1897.jpeg" alt="Hình ảnh ngày hội STEM" loading="lazy" decoding="async" itemprop="image" />
+            <div class="p">
+              <span class="chip" itemprop="datePublished" content="2025-08-15">15/08</span>
+              <h3 itemprop="headline">Ngày hội STEM – Sáng tạo không giới hạn</h3>
+              <p itemprop="description">Học sinh trưng bày các dự án robot, IoT và sản phẩm khoa học sáng tạo.</p>
+            </div>
+          </article>
+
+          <!-- More news -->
+          <article class="card news" itemscope itemtype="https://schema.org/NewsArticle">
+            <img src="http://placehold.it/400x160?text=Tong+ket" alt="Hình ảnh tổng kết năm học" loading="lazy" decoding="async" itemprop="image" />
+            <div class="p">
+              <span class="chip" itemprop="datePublished" content="2025-05-27">27/05</span>
+              <h3 itemprop="headline">Tổng kết phát thưởng năm học 2024-2025</h3>
+              <p itemprop="description">Trường tổ chức lễ tổng kết và khen thưởng học sinh, giáo viên có thành tích xuất sắc trong năm học.</p>
+            </div>
+          </article>
         </div>
       </div>
-      <div class="card">
-        <div class="p">
-          <h3 style="margin:0 0 8px">Biểu mẫu nhanh</h3>
-          <form id="applyForm">
-     <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
-                <input required name="name" placeholder="Họ và tên học sinh" aria-label="Họ và tên học sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-                <input required name="grade" placeholder="Đăng ký lớp (6 hoặc 10)" pattern="^(6|10)$" aria-label="Lớp đăng ký" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+    </section>
+
+    <!-- Đánh giá giáo viên -->
+    <section id="teacher-reviews" aria-labelledby="reviews-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="reviews-title">Đánh giá Giáo viên</h2>
+          <p class="muted">Ý kiến từ phụ huynh và học sinh</p>
+        </div>
+
+        <div class="reviews-container">
+          <article class="review-card" role="article" aria-label="Đánh giá Thầy Nguyễn Văn A">
+            <h3>Thầy Nguyễn Văn A</h3>
+            <p><strong>Môn:</strong> Toán</p>
+            <div class="stars" aria-hidden="true">⭐⭐⭐⭐⭐</div>
+            <p class="comment">Thầy giảng dễ hiểu, ví dụ thực tế, học sinh rất thích.</p>
+          </article>
+
+          <article class="review-card" role="article" aria-label="Đánh giá Cô Trần Thị B">
+            <h3>Cô Trần Thị B</h3>
+            <p><strong>Môn:</strong> Văn</p>
+            <div class="stars" aria-hidden="true">⭐⭐⭐⭐</div>
+            <p class="comment">Cô giảng nhiệt tình, nhưng tốc độ hơi nhanh.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- KHEN THƯỞNG -->
+    <section id="khenthuong" aria-labelledby="rewards-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="rewards-title">Khen thưởng & Thành tích</h2>
+          <p class="muted">Vinh danh học sinh, giáo viên xuất sắc</p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card">
+            <div class="p">
+              <h3>Học sinh giỏi cấp tỉnh</h3>
+              <p class="muted">Danh sách đang cập nhật</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="p">
+              <h3>Khen thưởng nội bộ</h3>
+              <p class="muted">Khen thưởng học sinh con cán bộ / thành tích phong trào</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="p">
+              <h3>Khen thưởng từ đối tác</h3>
+              <p class="muted">Các nguồn hỗ trợ và khen thưởng từ doanh nghiệp địa phương</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TUYỂN SINH -->
+    <section id="tuyensinh" aria-labelledby="admissions-title">
+      <div class="container admissions">
+        <div>
+          <div class="section-title">
+            <h2 id="admissions-title">Tuyển sinh trực tuyến</h2>
+            <p class="muted">Đơn giản trong 3 bước</p>
+          </div>
+
+          <div class="steps" aria-hidden="false">
+            <div class="step"><div class="num">1</div><div>Điền thông tin học sinh & phụ huynh vào biểu mẫu.</div></div>
+            <div class="step"><div class="num">2</div><div>Tải lên ảnh/scan học bạ, giấy khai sinh (nếu có).</div></div>
+            <div class="step"><div class="num">3</div><div>Nhà trường liên hệ xác nhận trong vòng 3 ngày làm việc.</div></div>
+          </div>
+
+          <div class="cta-row" style="margin-top:12px">
+            <button class="btn primary" type="button" onclick="document.getElementById('applyForm').scrollIntoView({behavior:'smooth'})" aria-label="Mở biểu mẫu đăng ký">Mở biểu mẫu</button>
+            <a class="btn" href="#quydinh" aria-label="Quy định tuyển sinh">Quy định tuyển sinh</a>
+          </div>
+        </div>
+
+        <div class="card" style="min-width:320px;">
+          <div class="p">
+            <h3 style="margin:0 0 8px">Biểu mẫu nhanh</h3>
+            <form id="applyForm" novalidate>
+              <div class="grid" style="grid-template-columns:1fr 1fr; gap:10px">
+                <input required name="name" aria-required="true" placeholder="Họ và tên học sinh" aria-label="Họ và tên học sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <input required name="grade" aria-required="true" placeholder="Đăng ký lớp (6 hoặc 10)" pattern="^(6|10)$" aria-label="Lớp đăng ký" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
                 <input required name="parent" placeholder="Họ tên phụ huynh" aria-label="Họ tên phụ huynh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-              <input required name="phone" placeholder="Số điện thoại" pattern="[0-9\s()+-]{8,}" aria-label="Số điện thoại" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-              <input name="email" placeholder="Email (không bắt buộc)" type="email" aria-label="Email" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-              <input name="address" placeholder="Địa chỉ" aria-label="Địa chỉ" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-              <input type="file" name="documents" accept=".pdf,.jpg,.png" multiple aria-label="Tải lên học bạ hoặc giấy khai sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
-              <textarea name="note" placeholder="Ghi chú" aria-label="Ghi chú" style="grid-column:1/-1; padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);min-height:90px"></textarea>
-            </div>
-            <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
-              <button class="btn success" type="submit" aria-label="Gửi đăng ký">Gửi đăng ký</button>
-              <label style="font-size:12px;opacity:.8"><input required type="checkbox" aria-label="Đồng ý với điều khoản" /> Tôi đồng ý với điều khoản xử lý dữ liệu.</label>
-            </div>
-            <p id="applyMsg" class="muted" style="margin-top:8px" aria-live="polite"></p>
-          </form>
+                <input required name="phone" placeholder="Số điện thoại" pattern="[0-9\s()+-]{8,}" aria-label="Số điện thoại" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <input name="email" placeholder="Email (không bắt buộc)" type="email" aria-label="Email" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <input name="address" placeholder="Địa chỉ" aria-label="Địa chỉ" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <input type="file" name="documents" accept=".pdf,.jpg,.png" multiple aria-label="Tải lên học bạ hoặc giấy khai sinh" style="padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text)" />
+                <textarea name="note" placeholder="Ghi chú" aria-label="Ghi chú" style="grid-column:1/-1; padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--text);min-height:90px"></textarea>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+                <button class="btn success" type="submit" aria-label="Gửi đăng ký">Gửi đăng ký</button>
+                <label style="font-size:12px;opacity:.8">
+                  <input required type="checkbox" aria-label="Đồng ý với điều khoản" /> Tôi đồng ý với điều khoản xử lý dữ liệu.
+                </label>
+              </div>
+
+              <p id="applyMsg" class="muted" style="margin-top:8px" aria-live="polite"></p>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- LỊCH & SỰ KIỆN -->
-  <section id="lich" aria-labelledby="calendar-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="calendar-title">Lịch công tác & Sự kiện</h2>
-        <p class="muted">Tuần 01 • 25/08 — 31/08</p>
-      </div>
-      <div class="timeline">
-        <div class="tl-item"><div class="time">Thứ 2</div><div class="bubble">Chào cờ đầu tuần — Triển khai nền nếp năm học.</div></div>
-        <div class="tl-item"><div class="time">Thứ 3</div><div class="bubble">Họp tổ chuyên môn — Phân công nhiệm vụ.</div></div>
-        <div class="tl-item"><div class="time">Thứ 5</div><div class="bubble">Sinh hoạt CLB STEM — Phòng thí nghiệm 2.</div></div>
-        <div class="tl-item"><div class="time">Thứ 7</div><div class="bubble">Lễ phát động phong trào thi đua đầu năm.</div></div>
-      </div>
-      <div id="calendar" role="region" aria-label="Lịch sự kiện"></div>
-    </div>
-  </section>
+    <!-- LỊCH & SỰ KIỆN -->
+    <section id="lich" aria-labelledby="calendar-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="calendar-title">Lịch công tác & Sự kiện</h2>
+          <p class="muted">Tuần 01 • 25/08 — 31/08</p>
+        </div>
 
-  <!-- THƯ VIỆN ẢNH -->
-  <section aria-labelledby="gallery-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="gallery-title">Thư viện ảnh</h2>
-        <p class="muted">Khoảnh khắc tiêu biểu</p>
-      </div>
-      <div class="gallery">
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210327/163246463_1100361523790271_7010963589764280044_n_e29e676b8a.jpg" alt="Hoạt động trường" loading="lazy" decoding="async" />
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20211009/IMG_0218_aae69f44da.jpeg" alt="Sự kiện trường" loading="lazy" decoding="async" />
-        <img src="https://quickshare.samsungcloud.com/ls/public/v1/links/1756909598475LcxRC3h/contents/03c57fb188d211f085e34aeb037a28a2/resized/1280?signature=KBNoHMgUK6vfyaIajYqss8v8IObbKY2LR_eDRbY0UEiPcoo5QbkDmxJ8XrYAxzkP4Q34IKd_xmeARGWrKEtlifY40Vh3t-ZSxVSr9PkuxscL3bo3IcWb8mOYUJYXL0Ltx1XCOMWE_H8eAj4jBiXBxQ&storageType=file" alt="Học sinh" loading="lazy" decoding="async" />
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/60x90_b35a8ed150.jpg" alt="Lễ hội" loading="lazy" decoding="async" />
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/IMG_9557_-_Copy_89534e095f.jpg" alt="Hoạt động ngoại khóa" loading="lazy" decoding="async" />
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/IMG_9564_-_Copy_b709199edb.jpg" alt="Sinh hoạt trường" loading="lazy" decoding="async" />
-        <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/IMG_9632_e1b456b84b.jpg" alt="Học tập" loading="lazy" decoding="async" />
-      </div>
-    </div>
-  </section>
+        <div class="timeline" aria-hidden="false">
+          <div class="tl-item"><div class="time">Thứ 2</div><div class="bubble">Chào cờ đầu tuần — Triển khai nền nếp năm học.</div></div>
+          <div class="tl-item"><div class="time">Thứ 3</div><div class="bubble">Họp tổ chuyên môn — Phân công nhiệm vụ.</div></div>
+          <div class="tl-item"><div class="time">Thứ 5</div><div class="bubble">Sinh hoạt CLB STEM — Phòng thí nghiệm 2.</div></div>
+          <div class="tl-item"><div class="time">Thứ 7</div><div class="bubble">Lễ phát động phong trào thi đua đầu năm.</div></div>
+        </div>
 
-  <!-- LIÊN HỆ -->
-  <section id="lienhe" aria-labelledby="contact-title">
-    <div class="container">
-      <div class="section-title">
-        <h2 id="contact-title">Liên hệ</h2>
-        <p class="muted">Trường Đoàn Kết — Ia Chim, Quảng Ngãi</p>
+        <div id="calendar" role="region" aria-label="Lịch sự kiện" style="margin-top:14px"></div>
       </div>
-      <div class="grid grid-3">
-        <div class="card"><div class="p"><h3 style="margin:0 0 6px">Văn phòng</h3><p class="muted">SĐT: <b>0348707829</b><br>Email: <b>giabaotranle56@gmail.com</b></p><a class="btn" href="tel:+0348707829" aria-label="Gọi văn phòng">Gọi ngay</a></div></div>
-        <div class="card"><div class="p"><h3 style="margin:0 0 6px">Giờ làm việc</h3><p class="muted">T2–T6: 7:30–11:30 • 13:30–17:00<br>T7: 7:30–11:00</p></div></div>
-        <div class="card"><div class="p"><h3 style="margin:0 0 6px">Địa chỉ</h3><p class="muted">Ia Chim, tỉnh Quảng Ngãi (Thôn 5 xã Đoàn Kết)</p><a class="btn" target="_blank" href="https://maps.app.goo.gl/PwmeZRzQmxno9VG98" aria-label="Xem bản đồ">Xem bản đồ</a><p id="chatFallback" class="error-message hidden">Không thể tải chat trực tuyến. Vui lòng liên hệ qua SĐT hoặc email.</p></div></div>
+    </section>
+
+    <!-- THƯ VIỆN ẢNH -->
+    <section aria-labelledby="gallery-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="gallery-title">Thư viện ảnh</h2>
+          <p class="muted">Khoảnh khắc tiêu biểu</p>
+        </div>
+        <div class="gallery" role="list">
+          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210327/163246463_1100361523790271_7010963589764280044_n_e29e676b8a.jpg" alt="Hoạt động trường" loading="lazy" decoding="async" role="listitem" />
+          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20211009/IMG_0218_aae69f44da.jpeg" alt="Sự kiện trường" loading="lazy" decoding="async" role="listitem"/>
+          <img src="https://quickshare.samsungcloud.com/ls/public/v1/links/1756909598475LcxRC3h/contents/03c57fb188d211f085e34aeb037a28a2/resized/1280" alt="Học sinh" loading="lazy" decoding="async" role="listitem"/>
+          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/60x90_b35a8ed150.jpg" alt="Lễ hội" loading="lazy" decoding="async" role="listitem"/>
+          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/IMG_9557_-_Copy_89534e095f.jpg" alt="Hoạt động ngoại khóa" loading="lazy" decoding="async" role="listitem"/>
+          <img src="http://c12doanket-iachim.quangngai.edu.vn/upload/39238/20210326/IMG_9564_-_Copy_b709199edb.jpg" alt="Sinh hoạt trường" loading="lazy" decoding="async" role="listitem"/>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- LIÊN HỆ -->
+    <section id="lienhe" aria-labelledby="contact-title">
+      <div class="container">
+        <div class="section-title">
+          <h2 id="contact-title">Liên hệ</h2>
+          <p class="muted">Trường Đoàn Kết — Ia Chim, Quảng Ngãi</p>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="card">
+            <div class="p">
+              <h3 style="margin:0 0 6px">Văn phòng</h3>
+              <p class="muted">SĐT: <b>0348707829</b><br>Email: <b>giabaotranle56@gmail.com</b></p>
+              <a class="btn" href="tel:+84348707829" aria-label="Gọi văn phòng">Gọi ngay</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="p">
+              <h3 style="margin:0 0 6px">Giờ làm việc</h3>
+              <p class="muted">T2–T6: 7:30–11:30 • 13:30–17:00<br>T7: 7:30–11:00</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="p">
+              <h3 style="margin:0 0 6px">Địa chỉ</h3>
+              <p class="muted">Ia Chim, tỉnh Quảng Ngãi (Thôn 5 xã Đoàn Kết)</p>
+              <a class="btn" target="_blank" href="https://maps.app.goo.gl/PwmeZRzQmxno9VG98" rel="noopener noreferrer" aria-label="Xem bản đồ">Xem bản đồ</a>
+              <p id="chatFallback" class="error-message hidden" style="margin-top:8px">Không thể tải chat trực tuyến. Vui lòng liên hệ qua SĐT hoặc email.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
   <!-- FOOTER -->
   <footer>
@@ -831,269 +656,311 @@
           <p class="muted">Web Trường: giao diện hiện đại, hiệu ứng mượt, tối ưu SEO.</p>
           <p class="muted">Được thiết kế bởi Gia Bảo và TLGB TEAM</p>
         </div>
+
         <div>
           <h4>Chuyên mục</h4>
           <ul>
-            <li><a href="#tintuc" aria-label="Tin tức">Tin tức</a></li>
-            <li><a href="#khenthuong" aria-label="Khen thưởng">Khen thưởng</a></li>
-            <li><a href="#tuyensinh" aria-label="Tuyển sinh">Tuyển sinh</a></li>
-            <li><a href="#lich" aria-label="Lịch">Lịch</a></li>
-            <li><a href="#lienhe" aria-label="Liên hệ">Liên hệ</a></li>
+            <li><a href="#tintuc">Tin tức</a></li>
+            <li><a href="#khenthuong">Khen thưởng</a></li>
+            <li><a href="#tuyensinh">Tuyển sinh</a></li>
+            <li><a href="#lich">Lịch</a></li>
+            <li><a href="#lienhe">Liên hệ</a></li>
           </ul>
         </div>
+
         <div>
           <h4>Tài nguyên</h4>
           <ul>
-            <li><a href="#" aria-label="Văn bản">Văn bản</a></li>
-            <li><a href="#" aria-label="Thời khóa biểu">Thời khóa biểu</a></li>
-            <li><a href="#" aria-label="Tải biểu mẫu">Tải biểu mẫu</a></li>
+            <li><a href="#">Văn bản</a></li>
+            <li><a href="#">Thời khóa biểu</a></li>
+            <li><a href="#">Tải biểu mẫu</a></li>
           </ul>
         </div>
+
         <div>
           <h4>Mạng xã hội</h4>
           <ul>
-            <li><a class="chip" href="https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN" target="_blank" rel="noopener noreferrer" aria-label="Fanpage Facebook Trường Đoàn Kết"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:0 0 16px" aria-hidden="true"><path d="M22 12.07C22 6.48 17.52 2 11.93 2S1.86 6.48 1.86 12.07C1.86 17.06 5.87 21.19 10.69 21.98v-7.03H8.28v-2.88h2.41V9.4c0-2.39 1.43-3.71 3.61-3.71 1.05 0 2.15.19 2.15.19v2.37h-1.21c-1.19 0-1.56.74-1.56 1.5v1.8h2.66l-.43 2.88h-2.23v7.03c4.82-.79 8.83-4.92 8.83-9.91z"/></svg> Fanpage Facebook</a></li>
-            <li><a class="chip" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Kênh YouTube Trường Đoàn Kết"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:0 0 16px" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.12C19.56 3.5 12 3.5 12 3.5s-7.56 0-9.4.58A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.12C4.44 20.5 12 20.5 12 20.5s7.56 0 9.4-.58a3 3 0 0 0 2.1-2.12A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg> Kênh YouTube</a></li>
-            <li><a class="chip" href="https://zalo.me/0348707829" target="_blank" rel="noopener noreferrer" aria-label="Zalo Trường Đoàn Kết 0348707829"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:0 0 16px" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.66 14.11L2 22l5.93-1.3A10 10 0 1 0 12 2zm-1.1 6.2h2.78L9.8 15.2H7.14l3.76-6.98z"/></svg> Zalo: 0348707829</a></li>
+            <li><a class="chip" href="https://www.facebook.com/gia.bao.tranle.2025?locale=vi_VN" target="_blank" rel="noopener noreferrer" aria-label="Fanpage Facebook Trường Đoàn Kết">Fanpage Facebook</a></li>
+            <li><a class="chip" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Kênh YouTube Trường Đoàn Kết">Kênh YouTube</a></li>
+            <li><a class="chip" href="https://zalo.me/0348707829" target="_blank" rel="noopener noreferrer" aria-label="Zalo Trường Đoàn Kết">Zalo: 0348707829</a></li>
           </ul>
         </div>
       </div>
+
       <div class="copy">© <span id="y"></span> Trần Lê Gia Bảo — TLGB TEAM.</div>
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tlgb/loader@1.0.0/dist/loader.min.js" defer></script>
   <script>
-    // Utility: Debounce function
-    function debounce(fn, ms) {
-      let timeout;
-      return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), ms);
-      };
-    }
+  (function () {
+    'use strict';
 
-    // Chative Messenger Error Handling
-    function initChativeMessenger() {
-      const script = document.createElement('script');
-      script.src = 'https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js?mode=livechat';
-      script.async = true;
-      script.onerror = () => {
-        console.error('[Messenger] Failed to load Chative script');
-        document.getElementById('chatFallback').classList.remove('hidden');
-      };
-      script.onload = () => {
-        console.log('[Messenger] Chative script loaded successfully');
-      };
-      document.head.appendChild(script);
-    }
-
-    // Mobile menu
-    const mobileNav = document.getElementById('mobileNav');
-    document.getElementById('btnMenu').addEventListener('click', () => {
-      mobileNav.classList.add('active');
-      mobileNav.querySelector('a').focus();
-    });
-    document.getElementById('closeMenu').addEventListener('click', () => {
-      mobileNav.classList.remove('active');
-      document.getElementById('btnMenu').focus();
-    });
-    document.querySelectorAll('.mobile-nav a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileNav.classList.remove('active');
+    // Small dynamic script loader (single instance guard)
+    const scriptCache = {};
+    function loadScript(src, opts = {}) {
+      if (scriptCache[src]) return scriptCache[src];
+      scriptCache[src] = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        if (opts.async) s.async = true;
+        if (opts.defer) s.defer = true;
+        s.onload = () => resolve();
+        s.onerror = (e) => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
       });
-    });
+      return scriptCache[src];
+    }
 
-    // Keyboard navigation for mobile menu
-    mobileNav.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+    // Utility: debounce
+    function debounce(fn, ms = 250) {
+      let t;
+      return (...a) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...a), ms);
+      };
+    }
+
+    // Safe DOM helpers
+    function $(sel, ctx = document) { return ctx.querySelector(sel); }
+    function $$(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
+
+    // Mobile menu accessibility
+    const btnMenu = $('#btnMenu');
+    const mobileNav = $('#mobileNav');
+    const closeMenu = $('#closeMenu');
+    if (btnMenu && mobileNav) {
+      btnMenu.addEventListener('click', () => {
+        mobileNav.classList.add('active');
+        const first = mobileNav.querySelector('a, button');
+        if (first) first.focus();
+      });
+    }
+    if (closeMenu && mobileNav && btnMenu) {
+      closeMenu.addEventListener('click', () => {
         mobileNav.classList.remove('active');
-        document.getElementById('btnMenu').focus();
-      }
-    });
-
-    // Counters
-        const counters = [{el:'st1',to:272},{el:'st2',to:19},{el:'st3',to:11}];
-        counters.forEach(({el,to}) => {
-          const node = document.getElementById(el);
-          let v = 0;
-          const step = Math.max(1, Math.floor(to / 80));
-          const iv = setInterval(() => {
-            v += step;
-            if (v >= to) {
-              v = to;
-              clearInterval(iv);
-            }
-            node.textContent = v.toLocaleString('vi-VN');
-          }, 16);
-        });
-
-    // Smooth reveal on scroll
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.style.transform = 'translateY(0)';
-          e.target.style.opacity = 1;
-          io.unobserve(e.target);
+        btnMenu.focus();
+      });
+    }
+    $$('.mobile-nav a').forEach(a => a.addEventListener('click', () => mobileNav && mobileNav.classList.remove('active')));
+    if (mobileNav) {
+      mobileNav.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          mobileNav.classList.remove('active');
+          btnMenu && btnMenu.focus();
         }
       });
-    }, { threshold: .12 });
-    document.querySelectorAll('section .container > *').forEach(el => {
-      el.style.opacity = .001;
+    }
+
+    // Counters (smooth, performant)
+    const counters = [{ id: 'st1', value: 272 }, { id: 'st2', value: 19 }, { id: 'st3', value: 11 }];
+    counters.forEach(({ id, value }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let cur = 0;
+      const duration = 900;
+      const steps = Math.max(24, Math.floor(duration / 16));
+      const step = Math.max(1, Math.floor(value / steps));
+      const iv = setInterval(() => {
+        cur += step;
+        if (cur >= value) {
+          el.textContent = value.toLocaleString('vi-VN');
+          clearInterval(iv);
+        } else {
+          el.textContent = cur.toLocaleString('vi-VN');
+        }
+      }, Math.max(12, Math.floor(duration / steps)));
+    });
+
+    // Reveal on scroll (reuse existing IntersectionObserver pattern safely)
+    const revealObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          const t = en.target;
+          t.style.opacity = 1;
+          t.style.transform = 'translateY(0)';
+          obs.unobserve(t);
+        }
+      });
+    }, { threshold: 0.12 });
+    $$('.container > *').forEach(el => {
+      // only animate visible sections
+      el.style.opacity = 0.001;
       el.style.transform = 'translateY(12px)';
       el.style.transition = 'all .6s cubic-bezier(.22,1,.36,1)';
-      io.observe(el);
+      revealObserver.observe(el);
     });
 
-    // Form validation and submission
-    async function submitApply(ev) {
-      ev.preventDefault();
-      const form = new FormData(ev.target);
-      const name = form.get('name');
-      const grade = form.get('grade');
-      const phone = form.get('phone');
-      const files = form.get('documents');
-      const msg = document.getElementById('applyMsg');
+    // Form validation & submission (robust file-size check)
+    const applyForm = document.getElementById('applyForm');
+    if (applyForm) {
+      applyForm.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const form = new FormData(applyForm);
+        const name = (form.get('name') || '').toString().trim();
+        const grade = (form.get('grade') || '').toString().trim();
+        const phone = (form.get('phone') || '').toString().trim();
+        const files = applyForm.querySelector('[name="documents"]') ? applyForm.querySelector('[name="documents"]').files : null;
+        const msg = document.getElementById('applyMsg');
+        if (msg) {
+          msg.classList.remove('error-message');
+          msg.textContent = '';
+        }
 
-      // Reset message
-      msg.textContent = '';
-      msg.classList.remove('error-message');
+        // Basic validations
+        if (!name) return setError('❌ Vui lòng nhập họ tên học sinh.');
+        if (!['6', '10'].includes(grade)) return setError('❌ Lớp đăng ký phải là 6 hoặc 10.');
+        if (!phone.match(/^[0-9\s()+-]{8,}$/)) return setError('❌ Số điện thoại không hợp lệ.');
 
-      // Validation
-      if (!['6', '10'].includes(grade)) {
-        msg.textContent = '❌ Lớp đăng ký phải là 6 hoặc 9.';
-        msg.classList.add('error-message');
-        return;
-      }
-      if (!phone.match(/[0-9\s()+-]{8,}/)) {
-        msg.textContent = '❌ Số điện thoại không hợp lệ.';
-        msg.classList.add('error-message');
-        return;
-      }
-      if (files.size > 5 * 1024 * 1024) { // 5MB limit
-        msg.textContent = '❌ Kích thước tệp vượt quá 5MB.';
-        msg.classList.add('error-message');
-        return;
-      }
+        // Files total size check (5MB)
+        if (files && files.length) {
+          let total = 0;
+          for (let i = 0; i < files.length; i++) total += files[i].size;
+          if (total > 5 * 1024 * 1024) return setError('❌ Tổng kích thước tệp vượt quá 5MB.');
+        }
 
-      // Simulate async submission
-      try {
-        // Placeholder for actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        msg.textContent = `✅ Đã nhận đăng ký cho ${name}. Nhà trường sẽ liên hệ sớm!`;
-        ev.target.reset();
-      } catch (e) {
-        msg.textContent = '❌ Có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.';
-        msg.classList.add('error-message');
-      }
-    }
+        try {
+          // Replace this block with real API call if available
+          if (msg) msg.textContent = '⏳ Đang gửi...';
+          await new Promise(r => setTimeout(r, 900));
+          if (msg) msg.textContent = `✅ Đã nhận đăng ký cho ${name}. Nhà trường sẽ liên hệ sớm!`;
+          applyForm.reset();
+        } catch (err) {
+          setError('❌ Có lỗi xảy ra khi gửi đăng ký. Vui lòng thử lại.');
+        }
 
-    document.getElementById('applyForm').addEventListener('submit', submitApply);
-
-    // Footer year
-    document.getElementById('y').textContent = new Date().getFullYear();
-
-    // Parallax background
-    document.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      document.body.style.backgroundPosition = `center ${-y * 0.05}px`;
-    });
-
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('light');
-      localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
-      document.getElementById('themeToggle').textContent = document.documentElement.classList.contains('light') ? '🌞' : '🌙';
-    });
-    if (localStorage.getItem('theme') === 'light') {
-      document.documentElement.classList.add('light');
-      document.getElementById('themeToggle').textContent = '🌞';
-    }
-
-    // News search with debounce
-    const searchNews = debounce((query) => {
-      document.querySelectorAll('.news').forEach(article => {
-        const text = article.textContent.toLowerCase();
-        article.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
-      });
-    }, 300);
-    document.getElementById('newsSearch').addEventListener('input', (e) => {
-      searchNews(e.target.value);
-    });
-
-    // Hero illustration parallax
-    const heroIll = document.querySelector('.hero-ill');
-    heroIll.addEventListener('mousemove', (e) => {
-      const rect = heroIll.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      heroIll.querySelectorAll('.orb').forEach(orb => {
-        orb.style.transform = `translate(${x * 20}px, ${y * 20}px)`;
-      });
-    });
-    heroIll.addEventListener('mouseleave', () => {
-      heroIll.querySelectorAll('.orb').forEach(orb => {
-        orb.style.transform = 'translate(0, 0)';
-      });
-    });
-
-    // FullCalendar
-    document.addEventListener('DOMContentLoaded', () => {
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'vi',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: [
-          { title: 'Chào cờ đầu tuần', start: '2025-08-25', description: 'Triển khai nền nếp năm học' },
-          { title: 'Họp tổ chuyên môn', start: '2025-08-26', description: 'Phân công nhiệm vụ' },
-          { title: 'Sinh hoạt CLB STEM', start: '2025-08-28', description: 'Phòng thí nghiệm 2' },
-          { title: 'Lễ phát động thi đua', start: '2025-08-30', description: 'Phong trào thi đua đầu năm' }
-        ],
-        eventColor: 'var(--accent)',
-        eventTextColor: 'var(--card)',
-        height: 'auto',
-        eventDidMount: function(info) {
-          if (info.event.extendedProps.description) {
-            info.el.setAttribute('aria-label', `${info.event.title}: ${info.event.extendedProps.description}`);
-          }
+        function setError(text) {
+          if (!msg) return;
+          msg.textContent = text;
+          msg.classList.add('error-message');
         }
       });
-      calendar.render();
+    }
+
+    // Footer year
+    const yEl = document.getElementById('y');
+    if (yEl) yEl.textContent = new Date().getFullYear();
+
+    // Parallax background (rAF throttled)
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY || window.pageYOffset;
+          document.body.style.backgroundPosition = `center ${-y * 0.05}px`;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Theme toggle (persist)
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('light');
+        const isLight = document.documentElement.classList.contains('light');
+        try { localStorage.setItem('theme', isLight ? 'light' : 'dark'); } catch (e) {}
+        themeToggle.textContent = isLight ? '🌞' : '🌙';
+      });
+      if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.add('light');
+        themeToggle.textContent = '🌞';
+      }
+    }
+
+    // News search (debounced)
+    const newsSearch = document.getElementById('newsSearch');
+    if (newsSearch) {
+      const doSearch = debounce((q) => {
+        const s = q.trim().toLowerCase();
+        $$('.news').forEach(article => {
+          const ok = s === '' || article.textContent.toLowerCase().includes(s);
+          article.style.display = ok ? '' : 'none';
+        });
+      }, 300);
+      newsSearch.addEventListener('input', (e) => doSearch(e.target.value || ''));
+    }
+
+    // Hero parallax (guarded)
+    const heroIll = document.querySelector('.hero-ill');
+    if (heroIll) {
+      heroIll.addEventListener('mousemove', (e) => {
+        const rect = heroIll.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        heroIll.querySelectorAll('.orb').forEach(orb => {
+          orb.style.transform = `translate(${x * 18}px, ${y * 18}px)`;
+        });
+      });
+      heroIll.addEventListener('mouseleave', () => {
+        heroIll.querySelectorAll('.orb').forEach(orb => orb.style.transform = 'translate(0, 0)');
+      });
+    }
+
+    // FullCalendar: lazy-load and initialize once
+    (function initCalendar() {
+      const calEl = document.getElementById('calendar');
+      if (!calEl) return;
+
+      // Only load if FullCalendar not present
+      const src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js';
+      const localeSrc = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js';
+
+      Promise.resolve().then(() => {
+        if (window.FullCalendar && window.FullCalendar.Calendar) return;
+        return loadScript(src, { defer: true }).then(() => loadScript(localeSrc, { defer: true }));
+      }).then(() => {
+        if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+          throw new Error('FullCalendar did not expose expected API');
+        }
+        const Calendar = window.FullCalendar.Calendar;
+        const calendar = new Calendar(calEl, {
+          initialView: 'dayGridMonth',
+          locale: 'vi',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          events: [
+            { title: 'Chào cờ đầu tuần', start: '2025-08-25', description: 'Triển khai nền nếp năm học' },
+            { title: 'Họp tổ chuyên môn', start: '2025-08-26', description: 'Phân công nhiệm vụ' },
+            { title: 'Sinh hoạt CLB STEM', start: '2025-08-28', description: 'Phòng thí nghiệm 2' },
+            { title: 'Lễ phát động thi đua', start: '2025-08-30', description: 'Phong trào thi đua đầu năm' }
+          ],
+          eventColor: getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#4f9cff',
+          eventTextColor: getComputedStyle(document.documentElement).getPropertyValue('--card') || '#fff',
+          height: 'auto',
+          eventDidMount(info) {
+            if (info.event.extendedProps && info.event.extendedProps.description) {
+              info.el.setAttribute('aria-label', info.event.title + ': ' + info.event.extendedProps.description);
+            }
+          }
+        });
+        calendar.render();
+      }).catch((err) => {
+        // Show a simple fallback message in calendar container
+        console.warn('[Calendar] init failed:', err);
+        calEl.innerHTML = '<div class="card" style="padding:12px;border-radius:12px;">Không thể tải lịch. Vui lòng thử lại sau.</div>';
+      });
+    })();
+
+    // Chative messenger - non-blocking init with graceful fallback
+    function initChative() {
+      const src = 'https://messenger.svc.chative.io/static/v1.0/channels/s51de13cb-e497-4d27-8048-72589981d618/messenger.js';
+      loadScript(src, { async: true }).catch(() => {
+        console.warn('[Messenger] failed to load');
+        const fb = document.getElementById('chatFallback');
+        if (fb) fb.classList.remove('hidden');
+      });
+    }
+    // Defer messenger load until user interacts or after a short delay
+    window.addEventListener('load', () => {
+      // load after small delay to avoid blocking main paint
+      setTimeout(initChative, 1200);
+      // also allow explicit lazy trigger from page
+      window.__lazyLoadChat = initChative;
     });
 
-    // Initialize Chative Messenger with error handling
-    document.addEventListener('DOMContentLoaded', () => {
-      try {
-        initChativeMessenger();
-      } catch (e) {
-        console.error('[Messenger] Initialization failed:', e);
-        document.getElementById('chatFallback').classList.remove('hidden');
-      }
-    });
+  })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const calendarEl = document.getElementById("calendar");
-    if(calendarEl){
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        locale: "vi",
-        events: [
-          { title: "Khai giảng", start: "2025-09-05" },
-          { title: "Khảo sát", start: "2025-09-06" },
-          { title: "Tuyển sinh lớp 6", start: "2025-06-01", end: "2025-06-30" }
-        ]
-      });
-      calendar.render();
-    }
-  });
-</script>
-</body>
-</html>
