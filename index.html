@@ -325,6 +325,92 @@
       nav { display: none; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.min.js" defer></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous" defer></script>
+  <style>
+    #teacher-reviews {
+  padding: 2rem;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin: 2rem auto;
+  max-width: 800px;
+}
+
+.reviews-container {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.review-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #ddd;
+}
+
+.review-card .stars {
+  font-size: 1.2rem;
+  color: gold;
+}
+#reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+#reviewForm input, 
+#reviewForm select, 
+#reviewForm textarea {
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+#reviewForm button {
+  background: var(--accent);
+  color: white;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#reviewForm button:hover {
+  opacity: 0.9;
+}
+
+  </style>
+  <style>
+    #about-school {
+  padding: 2rem;
+  background: var(--card);
+  border-radius: 16px;
+  margin: 2rem auto;
+  max-width: 1000px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.about-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.school-img {
+  flex: 1 1 300px;
+  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.about-text {
+  flex: 2 1 400px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+  </style>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -414,10 +500,25 @@
             <a class="btn" href="#tintuc" aria-label="Xem tin mới">Xem tin mới</a>
             <a class="btn success" href="#lienhe" aria-label="Liên hệ Văn phòng">Liên hệ Văn phòng</a>
           </div>
-          <div class="stats">
-            <div class="stat"><b id="st1" aria-live="polite">0</b><small>Học sinh</small></div>
-            <div class="stat"><b id="st2" aria-live="polite">0</b><small>Giáo viên</small></div>
-            <div class="stat"><b id="st3" aria-live="polite">0</b><small>Phòng học</small></div>
+          <div class="stats" role="list" aria-label="Số liệu nhà trường" style="margin-top:1rem; gap:12px;">
+            <div class="stat" role="listitem" aria-hidden="false">
+              <b id="st1" aria-live="polite">0</b>
+              <small>Học sinh</small>
+            </div>
+            <div class="stat" role="listitem" aria-hidden="false">
+              <b id="st2" aria-live="polite">0</b>
+              <small>Giáo viên</small>
+            </div>
+            <div class="stat" role="listitem" aria-hidden="false">
+              <b id="st3" aria-live="polite">0</b>
+              <small>Phòng học</small>
+            </div>
+            <div class="stat" role="listitem" aria-hidden="false">
+              <strong style="font-size:1.2rem;color:var(--accent)">2005</strong>
+              <small>Thành lập</small>
+            </div>
+          </div>
+</style>
           </div>
         </div>
       </div>
@@ -428,6 +529,79 @@
           <div class="orb green" style="animation-delay:2s"></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Giới thiệu Trường (nâng cấp giao diện) -->
+  <section id="about-school" aria-labelledby="about-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="about-title">Giới thiệu Trường</h2>
+        <p class="muted">Tầm nhìn, sứ mệnh và một vài con số tiêu biểu</p>
+      </div>
+
+      <article class="card about-container" role="region" aria-label="Giới thiệu Trường THCS Đoàn Kết">
+        <picture class="school-img" style="flex:1 1 360px;max-width:420px;overflow:hidden;border-radius:12px;">
+          <source srcset="truong-large.jpg 1200w, truong.jpg 800w" sizes="(min-width:980px) 420px, 100vw">
+          <img src="https://lh3.googleusercontent.com/gps-cs-s/AC9h4nq6x1iBKvnb-u7hm8-bfZyrqZfVzuC9hF2Oq4gwIiS3eIfaafUqaa2ePIg3Awh0d4BNDDdpw8zLigArarW5gHDvNeyBxRZxKbFrAOy0bDzwyqOdvwDKvEZOqTPFUu2KJxdcIx5eGA=s680-w680-h510-rw" alt="Toàn cảnh Trường THCS Đoàn Kết" loading="lazy" decoding="async" style="width:100%;height:auto;display:block;">
+        </picture>
+
+        <div class="p" style="flex:2 1 520px;min-width:260px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span class="chip" style="background:rgba(79,156,255,.08);border-color:rgba(79,156,255,.22)">🏫 Trường THCS Đoàn Kết</span>
+            <small class="muted">Ia Chim — Quảng Ngãi</small>
+          </div>
+
+          <h3 style="margin-top:0;margin-bottom:8px">Ngôi trường của truyền thống và đổi mới</h3>
+
+          <p class="muted" style="margin-bottom:12px;line-height:1.6">
+            Trường THCS Đoàn Kết có bề dày truyền thống, luôn nỗ lực nâng cao chất lượng dạy và học.
+            Nhà trường từng bước cải tạo cơ sở vật chất, cập nhật phương pháp giảng dạy hiện đại,
+            đồng thời giữ gìn giá trị văn hoá trường học.
+          </p>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+              <small class="muted">Học sinh</small>
+              <b aria-live="polite">~272</b>
+            </div>
+            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+              <small class="muted">Giáo viên</small>
+              <b aria-live="polite">~19</b>
+            </div>
+            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+              <small class="muted">Phòng học</small>
+              <b aria-live="polite">~11</b>
+            </div>
+            <div class="stat" style="flex:0 0 120px;text-align:left;padding:10px;border-radius:12px;">
+              <small class="muted">Thành lập</small>
+              <b style="color:var(--accent)">2005</b>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div>
+              <h4 style="margin:0 0 6px;font-size:15px">Sứ mệnh</h4>
+              <p class="muted" style="margin:0;font-size:14px">Giáo dục toàn diện, phát huy năng lực và phẩm chất học sinh.</p>
+            </div>
+            <div>
+              <h4 style="margin:0 0 6px;font-size:15px">Tầm nhìn</h4>
+              <p class="muted" style="margin:0;font-size:14px">Trở thành môi trường học tập thân thiện, sáng tạo trong khu vực.</p>
+            </div>
+          </div>
+
+          <ul style="margin:0 0 14px 18px;color:var(--muted);line-height:1.5">
+            <li>Tập trung nâng cấp phòng học và thư viện.</li>
+            <li>Đào tạo đội ngũ giáo viên đổi mới phương pháp giảng dạy.</li>
+            <li>Khuyến khích hoạt động ngoại khoá, STEM và sáng tạo.</li>
+          </ul>
+
+          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+            <a class="btn primary" href="#tintuc" aria-label="Xem tin tức trường">Xem hoạt động</a>
+            <a class="btn" href="#lienhe" aria-label="Liên hệ nhà trường">Liên hệ ngay</a>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
@@ -492,6 +666,24 @@
       </div>
     </div>
   </section>
+  <!-- Đánh giá giáo viên -->
+   <section id="teacher-reviews">
+  <h2>Đánh giá Giáo viên</h2>
+  <div class="reviews-container">
+    <div class="review-card">
+      <h3>Thầy Nguyễn Văn A</h3>
+      <p><strong>Môn:</strong> Toán</p>
+      <div class="stars">⭐⭐⭐⭐⭐</div>
+      <p class="comment">Thầy giảng dễ hiểu, ví dụ thực tế, học sinh rất thích.</p>
+    </div>
+
+    <div class="review-card">
+      <h3>Cô Trần Thị B</h3>
+      <p><strong>Môn:</strong> Văn</p>
+      <div class="stars">⭐⭐⭐⭐</div>
+            <p class="comment">Cô giảng nhiệt tình, nhưng tốc độ hơi nhanh.</p>
+    </div>
+  </div>
 
   <!-- KHEN THƯỞNG (Phần mới thêm) -->
   <section id="khenthuong" aria-labelledby="rewards-title">
