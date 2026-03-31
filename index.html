@@ -76,8 +76,87 @@
             backdrop-filter: blur(12px);
         }
     </style>
+    <style>
+        /* Light mode overrides for common dark utility classes (simple but effective) */
+        body.light { background: #f8fafc !important; color: #0f172a !important; }
+        body.light .bg-gray-900 { background-color: #ffffff !important; }
+        body.light .bg-gray-800 { background-color: #f3f4f6 !important; }
+        body.light .bg-gray-700 { background-color: #e5e7eb !important; }
+        body.light .bg-gray-950 { background-color: #ffffff !important; }
+        body.light .text-gray-100 { color: #0f172a !important; }
+        body.light .text-gray-400 { color: #374151 !important; }
+        body.light .border-gray-800 { border-color: #e5e7eb !important; }
+        body.light .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(6px); }
+        /* Compact menu styles */
+        #main-menu { display: flex; gap: 8px; align-items: center; }
+        #main-menu .menu-item { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 16px; }
+        #main-menu .menu-item .label { margin-left: 6px; font-size: 13px; display: inline-block; }
+        #main-menu.compact .menu-item .label { display: none; }
+        #main-menu.compact .menu-item { padding: 8px; border-radius: 9999px; }
+
+        /* VIP loader styles */
+        .vip-orb { width: 84px; height: 84px; border-radius: 9999px; margin: 0 auto; position: relative; box-shadow: 0 6px 30px rgba(99,102,241,0.25), inset 0 0 40px rgba(34,197,94,0.12); background: conic-gradient(from 90deg at 50% 50%, #06b6d4, #a78bfa, #fb7185, #f59e0b); animation: orb-rotate 3.5s linear infinite; }
+        .vip-orb::after { content: ''; position: absolute; inset: 6px; border-radius: 9999px; background: radial-gradient(closest-side, rgba(255,255,255,0.18), rgba(255,255,255,0.02)); }
+        @keyframes orb-rotate { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.06); } 100% { transform: rotate(360deg) scale(1); } }
+        #global-loader.show { display:flex; }
+        /* shimmer for loader bar */
+        #loader-bar { background-size: 200% 100%; animation: loader-shimmer 5.0s linear infinite; }
+        @keyframes loader-shimmer { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
+        /* small entrance animation */
+        .loader-pop { animation: loader-pop 0.5s cubic-bezier(.2,.9,.3,1); }
+        @keyframes loader-pop { from { transform: translateY(6px) scale(.98); opacity: 0 } to { transform: translateY(0) scale(1); opacity:1 } }
+        /* Compact Quick Actions toolbar */
+        .qa-toolbar { display:flex; gap:8px; align-items:center; }
+        .qa-btn { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; transition:transform .14s ease, box-shadow .14s ease, width .18s ease; cursor:pointer; position:relative; }
+        .qa-btn i { font-size:16px; }
+        .qa-btn.gray { background:rgba(255,255,255,0.03); color:#e6eef8; border:1px solid rgba(255,255,255,0.04); }
+        .qa-btn.emerald { background:linear-gradient(90deg,#10b981,#06b6d4); color:#fff; }
+        .qa-btn.amber { background:linear-gradient(90deg,#f59e0b,#fb923c); color:#fff; }
+        .qa-btn.violet { background:linear-gradient(90deg,#7c3aed,#a78bfa); color:#fff; }
+        .qa-btn:hover { transform:translateY(-6px); box-shadow:0 18px 40px rgba(2,6,23,0.45); }
+        .qa-label { display:none; margin-left:8px; font-weight:600; font-size:13px; white-space:nowrap; }
+        .qa-toolbar.expanded .qa-btn { width:auto; padding:8px 12px; border-radius:14px; }
+        .qa-toolbar.expanded .qa-label { display:inline-block; }
+        .qa-expand { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+        .qa-expand i { font-size:12px; }
+        @media (max-width:880px){ .qa-toolbar{justify-content:center} .qa-btn{width:40px;height:40px} }
+        /* Glass icon pills for navbar status */
+        .glass-icon { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,0.03); backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,0.04); color:inherit; }
+        .glass-icon i { font-size:16px; }
+        .glass-icon:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(2,6,23,0.45); }
+        .navbar-status { display:flex; gap:8px; align-items:center; }
+        /* Camera overlay QA toolbar (always visible on dashboard) */
+        .camera-qa-overlay { position:absolute; right:18px; bottom:18px; display:flex; gap:8px; align-items:center; z-index:60; }
+        .camera-qa-overlay .qa-btn { pointer-events:auto; width:44px; height:44px; border-radius:12px; box-shadow:0 10px 30px rgba(2,6,23,0.45); }
+        .camera-qa-overlay .qa-label { display:none !important; }
+        @media (max-width:880px){ .camera-qa-overlay{right:12px;bottom:12px} }
+        /* collapsed / compact camera QA */
+        .camera-qa-overlay.collapsed { gap:6px; right:14px; bottom:14px; }
+        .camera-qa-overlay.collapsed .qa-btn { width:40px; height:40px; border-radius:9999px; padding:0; }
+        .camera-qa-overlay.collapsed .qa-btn:not(.fab-toggle) { opacity:0.95; }
+        .camera-qa-overlay .fab-toggle { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:9999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+        .camera-qa-overlay.collapsed .qa-label { display:none !important; }
+        .camera-qa-overlay { transition: all .18s ease; }
+    </style>
 </head>
 <body class="bg-gray-950 text-gray-100">
+
+<!-- GLOBAL VIP LOADER -->
+<div id="global-loader" class="fixed inset-0 z-[20000] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+    <div class="w-96 p-6 rounded-3xl bg-gradient-to-br from-emerald-900/80 to-teal-900/80 border border-emerald-500/30 shadow-2xl text-center loader-pop">
+        <div class="relative mb-4">
+            <div class="vip-orb mx-auto mb-3"></div>
+            <h3 id="loader-title" class="text-2xl font-bold text-emerald-300">FaceGuard AI Pro</h3>
+            <p id="loader-sub" class="text-sm text-gray-300 mt-2">Khởi tạo mô hình, tải mô-đun AI...</p>
+        </div>
+        <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+            <div id="loader-bar" class="h-full bg-gradient-to-r from-amber-400 via-rose-500 to-violet-400" style="width:6%"></div>
+        </div>
+        <div class="mt-4 flex items-center justify-center gap-3">
+            <button onclick="hideLoader(true)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-2xl text-sm">Bỏ qua</button>
+        </div>
+    </div>
+</div>
 
 <!-- NAVBAR -->
 <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 shadow-xl">
@@ -94,26 +173,21 @@
             <button onclick="showUsageGuide()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Hướng dẫn">
                 <i class="fas fa-question-circle text-xl"></i>
             </button>
-                <span class="ai-badge text-emerald-400 text-xl font-semibold">AI Pro v3.3</span>
-            </h1>
-            <span class="text-xs bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1 rounded-3xl font-semibold flex items-center gap-1 smoking-badge">
-                <i class="fas fa-smoking"></i> ANTI-SMOKING AI
-            </span>
-            <span id="cloud-ai-badge" onclick="openAICloudModal()"
-                  class="hidden text-xs bg-gradient-to-r from-violet-600 to-purple-600 text-white px-3 py-1 rounded-3xl font-semibold flex items-center gap-1 cursor-pointer hover:scale-105 transition">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span class="live-dot"></span> AI CLOUD LIVE
-            </span>
-            <span onclick="switchPage('page-system-monitor')" 
-                  class="cursor-pointer text-xs bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-3 py-1 rounded-3xl font-semibold flex items-center gap-1 hover:scale-105 transition">
-                <i class="fas fa-server"></i>
-                <span id="system-health-badge" class="live-dot"></span> 
-                HỆ THỐNG
-            </span>
-            <span onclick="showVersionModal()" class="text-[10px] px-2.5 py-px bg-emerald-900/70 text-emerald-300 rounded-2xl font-medium cursor-pointer">2026</span>
+            <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Chuyển chế độ Sáng/Tối">
+                <i id="theme-icon" class="fas fa-sun text-xl"></i>
+            </button>
+            <!-- Compact glass status group -->
+            <div class="ml-3 navbar-status">
+                <div class="glass-icon" title="AI Pro v3.3"><i class="fas fa-robot text-emerald-300"></i><span class="text-sm font-semibold">AI Pro v3.3</span></div>
+                <div class="glass-icon" title="Anti-Smoking"><i class="fas fa-smoking text-orange-400"></i></div>
+                <div id="cloud-indicator" class="glass-icon cursor-pointer" onclick="openAICloudModal()" title="AI Cloud (mở chat)"><i class="fas fa-cloud-upload-alt text-violet-400"></i><span id="cloud-dot-mini" class="status-dot hidden"></span></div>
+                <div class="glass-icon cursor-pointer" onclick="switchPage('page-system-monitor')" title="Giám sát hệ thống"><i class="fas fa-server text-yellow-400"></i></div>
+                <div class="glass-icon text-xs" title="Phiên bản">2026</div>
+                <div id="openai-badge-mini" class="glass-icon cursor-pointer hidden" title="OpenAI Live"><i class="fas fa-check-circle text-emerald-400"></i><span class="text-xs">OPENAI</span></div>
+            </div>
         </div>
        
-        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-6">
             <div onclick="openAICloudModal()" id="ai-cloud-status"
                  class="flex items-center gap-2 bg-violet-900/30 hover:bg-violet-900/50 text-violet-400 text-xs px-4 py-2 rounded-3xl cursor-pointer transition-all hover:scale-105">
                 <i class="fas fa-key"></i>
@@ -124,32 +198,52 @@
                     <div class="live-dot"></div>
                     <span id="ai-models-text">face-api + COCO-SSD REAL + Anti-Smoking</span>
                 </div>
+                
 
-                <!-- Quick Actions Bar -->
-                <div class="mt-4 flex items-center gap-3">
-                    <button onclick="toggleMultiCamera()" id="btn-multi-camera" class="px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-3xl flex items-center gap-2">
-                        <i class="fas fa-th-large"></i> Chế độ Nhiều Camera (4)
+                <!-- Quick Actions compact toolbar -->
+                <div class="mt-4 qa-toolbar" id="qa-toolbar">
+                    <button onclick="toggleMultiCamera()" id="btn-multi-camera" class="qa-btn gray" title="Chế độ Nhiều Camera (4)">
+                        <i class="fas fa-th-large"></i>
+                        <span class="qa-label">Chế độ nhiều camera</span>
                     </button>
-                    <button onclick="recordSession()" id="btn-record-session" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-3xl text-white flex items-center gap-2">
-                        <i class="fas fa-circle" style="color:#ff3860"></i> Ghi hình phiên
+                    <button onclick="recordSession()" id="btn-record-session" class="qa-btn emerald" title="Ghi hình phiên (12s)">
+                        <i class="fas fa-circle" style="color:rgba(255,255,255,0.95)"></i>
+                        <span class="qa-label">Ghi hình phiên</span>
                     </button>
-                    <button onclick="simulateAIDetection()" class="px-4 py-3 bg-amber-600 hover:bg-amber-700 rounded-3xl text-white flex items-center gap-2">
-                        <i class="fas fa-bolt"></i> Mô phỏng vi phạm
+                    <button onclick="simulateAIDetection()" id="btn-simulate" class="qa-btn amber" title="Mô phỏng vi phạm">
+                        <i class="fas fa-bolt"></i>
+                        <span class="qa-label">Mô phỏng vi phạm</span>
                     </button>
-                    <button onclick="toggleNotificationsEnabled()" id="btn-toggle-notifs" class="px-4 py-3 bg-violet-600 hover:bg-violet-700 rounded-3xl text-white flex items-center gap-2">
-                        <i class="fas fa-bell"></i> Bật thông báo
+                    <button onclick="toggleNotificationsEnabled()" id="btn-toggle-notifs" class="qa-btn violet" title="Bật/Tắt thông báo trình duyệt">
+                        <i class="fas fa-bell"></i>
+                        <span class="qa-label">Thông báo</span>
+                    </button>
+                    <button onclick="exportCsv()" id="btn-export-csv" class="qa-btn gray" title="Xuất CSV vi phạm">
+                        <i class="fas fa-file-csv"></i>
+                        <span class="qa-label">Xuất CSV</span>
+                    </button>
+                    <button onclick="previewPdfReport()" id="btn-preview-pdf" class="qa-btn gray" title="Preview PDF báo cáo">
+                        <i class="fas fa-file-pdf"></i>
+                        <span class="qa-label">Preview PDF</span>
+                    </button>
+                    <button onclick="toggleQaExpand()" id="btn-qa-expand" class="qa-expand" title="Mở rộng">
+                        <i id="qa-expand-icon" class="fas fa-chevron-left"></i>
                     </button>
                 </div>
 
             </div>
-            <div id="user-info" class="flex items-center gap-2 hidden">
-                <div class="text-right">
-                    <p id="user-name" class="font-semibold"></p>
-                    <p id="user-role" class="text-xs text-gray-400"></p>
-                </div>
-                <button onclick="logout()" class="px-5 py-2 text-sm font-medium text-red-400 hover:bg-red-900/30 rounded-3xl transition-all flex items-center gap-2">
-                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            <div class="relative">
+                <button id="user-compact" onclick="toggleUserMenu()" class="glass-icon flex items-center gap-2">
+                    <i class="fas fa-user-circle text-emerald-300 text-2xl"></i>
+                    <div class="hidden md:block text-sm text-left">
+                        <div id="user-name-mini" class="font-semibold">Quản trị viên</div>
+                        <div id="user-role-mini" class="text-xs text-gray-400">Admin</div>
+                    </div>
                 </button>
+                <div id="user-popover" class="hidden absolute right-0 mt-2 w-44 bg-gray-900 border border-gray-800 rounded-xl p-3 shadow-xl">
+                    <div class="text-sm text-gray-300 mb-3">Quản trị viên</div>
+                    <button onclick="logout()" class="w-full py-2 bg-red-600 hover:bg-red-700 rounded-xl text-white">Đăng xuất</button>
+                </div>
             </div>
            
             <div class="flex items-center gap-1.5 bg-gray-800 rounded-3xl px-2 py-1">
@@ -167,7 +261,40 @@
     </div>
     <!-- MENU -->
     <div class="max-w-7xl mx-auto px-6 border-t border-gray-800 bg-gray-900">
-        <div class="flex items-center gap-8 text-sm font-medium" id="main-menu"></div>
+        <div class="flex items-center gap-3 text-sm font-medium py-3" id="main-menu">
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-dashboard')">
+                <i class="fas fa-home text-amber-400"></i>
+                <span class="label">Trang chủ</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-register-face')">
+                <i class="fas fa-id-card text-emerald-300"></i>
+                <span class="label">Train Khuôn mặt AI</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-monitor')">
+                <i class="fas fa-video text-red-400"></i>
+                <span class="label">Giám sát AI</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-attendance')">
+                <i class="fas fa-list-check text-blue-400"></i>
+                <span class="label">Điểm danh AI</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-advanced-analytics')">
+                <i class="fas fa-chart-line text-violet-400"></i>
+                <span class="label">Phân tích AI</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-violations-db')">
+                <i class="fas fa-database text-orange-400"></i>
+                <span class="label">Cơ sở dữ liệu vi phạm</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-reports')">
+                <i class="fas fa-file-chart-column text-emerald-300"></i>
+                <span class="label">Báo cáo</span>
+            </button>
+            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-system-monitor')">
+                <i class="fas fa-server text-gray-300"></i>
+                <span class="label">Giám sát Hệ thống</span>
+            </button>
+        </div>
     </div>
 </nav>
 
@@ -251,6 +378,13 @@
                                 <span id="monitor-text">BẬT GIÁM SÁT AI THẬT</span>
                             </button>
                         </div>
+                    </div>
+                    <!-- Floating Quick Actions attached to camera -->
+                    <div class="camera-qa-overlay" id="camera-qa-overlay">
+                        <button onclick="toggleMultiCamera()" id="fab-multi-camera" class="qa-btn gray" title="Multi-Cam"><i class="fas fa-th-large"></i></button>
+                        <button onclick="recordSession()" id="fab-record" class="qa-btn emerald" title="Ghi hình"><i class="fas fa-circle" style="color:rgba(255,255,255,0.95)"></i></button>
+                        <button onclick="simulateAIDetection()" id="fab-simulate" class="qa-btn amber" title="Mô phỏng"><i class="fas fa-bolt"></i></button>
+                        <button onclick="toggleNotificationsEnabled()" id="fab-notifs" class="qa-btn violet" title="Thông báo"><i class="fas fa-bell"></i></button>
                     </div>
                 </div>
                
@@ -679,6 +813,8 @@
 </div>
 
 <script>
+// Show a quick VIP loader on initial script run
+try { showLoader('FaceGuard AI Pro', 'Chuẩn bị môi trường AI... (VIP)', 1600); } catch(e) {}
 // ==================== BIẾN GLOBAL ====================
 let currentUser = null;
 let isMonitoring = false;
@@ -1278,15 +1414,17 @@ function logout() { location.reload(); }
 
 function renderMainMenu() {
     const menuHTML = `
-        <a onclick="switchPage('page-dashboard')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-home"></i> Trang chủ</a>
-        <a onclick="switchPage('page-register-face')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-user-plus"></i> Train Khuôn mặt AI</a>
-        <a onclick="switchPage('page-monitor')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-video"></i> Giám sát AI</a>
-        <a onclick="switchPage('page-attendance')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-list-check"></i> Điểm danh AI</a>
-        <a onclick="switchPage('page-advanced-analytics')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-chart-bar"></i> Phân tích AI</a>
-        <a onclick="switchPage('page-violations-db')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-database"></i> Cơ sở dữ liệu vi phạm</a>
-        <a onclick="switchPage('page-reports')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-file-alt"></i> Báo cáo</a>
-        <a onclick="switchPage('page-system-monitor')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all bg-amber-900/30"><i class="fas fa-server"></i> Giám sát Hệ thống</a>
-        ${currentUser && currentUser.role === 'Admin' ? `<a onclick="switchPage('page-admin')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-cog"></i> Quản trị AI</a>` : ''}
+        <a class="menu-item" onclick="switchPage('page-dashboard')" title="Trang chủ"><i class="fas fa-home"></i><span class="label">Trang chủ</span></a>
+        <a class="menu-item" onclick="switchPage('page-register-face')" title="Train Khuôn mặt AI"><i class="fas fa-user-plus"></i><span class="label">Train Khuôn mặt</span></a>
+        <a class="menu-item" onclick="switchPage('page-monitor')" title="Giám sát AI"><i class="fas fa-video"></i><span class="label">Giám sát</span></a>
+        <a class="menu-item" onclick="switchPage('page-attendance')" title="Điểm danh AI"><i class="fas fa-list-check"></i><span class="label">Điểm danh</span></a>
+        <a class="menu-item" onclick="switchPage('page-advanced-analytics')" title="Phân tích AI"><i class="fas fa-chart-bar"></i><span class="label">Phân tích</span></a>
+        <a class="menu-item" onclick="switchPage('page-violations-db')" title="Cơ sở dữ liệu vi phạm"><i class="fas fa-database"></i><span class="label">Vi phạm</span></a>
+        <a class="menu-item" onclick="switchPage('page-reports')" title="Báo cáo"><i class="fas fa-file-alt"></i><span class="label">Báo cáo</span></a>
+        <a class="menu-item" onclick="switchPage('page-system-monitor')" title="Giám sát Hệ thống"><i class="fas fa-server"></i><span class="label">Hệ thống</span></a>
+        <a class="menu-item" id="auto-rollcall-btn" onclick="toggleAutoRollcall()" title="Bật/Tắt Auto Roll-call"><i class="fas fa-check-double"></i><span class="label">Auto Roll-call</span></a>
+        ${currentUser && currentUser.role === 'Admin' ? `<a class="menu-item" onclick="switchPage('page-admin')" title="Quản trị AI"><i class="fas fa-cog"></i><span class="label">Quản trị</span></a>` : ''}
+        <a class="menu-item" id="menu-collapse-toggle" onclick="document.getElementById('main-menu').classList.toggle('compact')" title="Thu gọn/Hiện nhãn"><i class="fas fa-compress-arrows-alt"></i><span class="label">Thu gọn</span></a>
     `;
     document.getElementById('main-menu').innerHTML = menuHTML;
 }
@@ -1356,6 +1494,43 @@ function showToast(text, isError = false) {
     toast.classList.remove('hidden');
     setTimeout(() => toast.classList.add('hidden'), 3400);
 }
+
+// Responsive: auto-compact main menu on small screens for optimized layout
+function applyMainMenuCompact() {
+    const menu = document.getElementById('main-menu');
+    if (!menu) return;
+    if (window.innerWidth < 980) menu.classList.add('compact');
+    else menu.classList.remove('compact');
+}
+window.addEventListener('load', applyMainMenuCompact);
+window.addEventListener('resize', () => { clearTimeout(window._mmResize); window._mmResize = setTimeout(applyMainMenuCompact, 120); });
+
+// Loader controls
+let loaderInterval = null;
+function showLoader(title = 'FaceGuard AI Pro', sub = 'Đang khởi tạo...', duration = 0) {
+    const g = document.getElementById('global-loader');
+    if (!g) return;
+    document.getElementById('loader-title').textContent = title;
+    document.getElementById('loader-sub').textContent = sub;
+    g.classList.remove('hidden'); g.classList.add('show');
+    const bar = document.getElementById('loader-bar');
+    let w = 6;
+    if (loaderInterval) clearInterval(loaderInterval);
+    loaderInterval = setInterval(()=>{
+        w += Math.random()*6;
+        if (w>98) w = 98;
+        if (bar) bar.style.width = w + '%';
+    }, 450);
+    if (duration && duration>0) setTimeout(()=> hideLoader(), duration);
+}
+function hideLoader(force=false) {
+    const g = document.getElementById('global-loader');
+    if (!g) return;
+    if (loaderInterval) { clearInterval(loaderInterval); loaderInterval = null; }
+    const bar = document.getElementById('loader-bar'); if (bar) bar.style.width = '100%';
+    setTimeout(()=>{ g.classList.add('hidden'); g.classList.remove('show'); if (!force) showToast('✅ Sẵn sàng!', false); }, 300);
+}
+
 
 // ==================== KHỞI ĐỘNG ====================
 // ==================== NOTIFICATIONS, MULTI-CAMERA, REPORTS, VOICE COMMANDS ====================
@@ -1497,6 +1672,89 @@ function exportPdfReport() {
     showToast('✅ PDF đã được xuất', false);
 }
 
+// Theme toggle
+function toggleTheme() {
+    document.body.classList.toggle('light');
+    const isLight = document.body.classList.contains('light');
+    localStorage.setItem('faceguard_theme', isLight ? 'light' : 'dark');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.className = isLight ? 'fas fa-moon text-xl' : 'fas fa-sun text-xl';
+    showToast(isLight ? '🌤 Chế độ Sáng' : '🌙 Chế độ Tối', false);
+}
+function applyThemeOnLoad() {
+    const t = localStorage.getItem('faceguard_theme') || 'dark';
+    if (t === 'light') { document.body.classList.add('light'); const icon = document.getElementById('theme-icon'); if (icon) icon.className = 'fas fa-moon text-xl'; }
+}
+
+// Quick Actions expand control
+function toggleQaExpand() {
+    const bar = document.getElementById('qa-toolbar');
+    if (!bar) return;
+    bar.classList.toggle('expanded');
+    const expanded = bar.classList.contains('expanded');
+    localStorage.setItem('faceguard_qa_expanded', expanded ? '1' : '0');
+    const icon = document.getElementById('qa-expand-icon');
+    if (icon) icon.className = expanded ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+}
+function applyQaStateOnLoad() {
+    const bar = document.getElementById('qa-toolbar');
+    if (!bar) return;
+    const exp = localStorage.getItem('faceguard_qa_expanded');
+    if (exp === '1') { bar.classList.add('expanded'); const icon = document.getElementById('qa-expand-icon'); if (icon) icon.className = 'fas fa-chevron-right'; }
+}
+
+// User popover
+function toggleUserMenu() {
+    const pop = document.getElementById('user-popover');
+    if (!pop) return;
+    pop.classList.toggle('hidden');
+}
+document.addEventListener('click', (e) => {
+    const pop = document.getElementById('user-popover');
+    const btn = document.getElementById('user-compact');
+    if (!pop || !btn) return;
+    if (!btn.contains(e.target) && !pop.contains(e.target)) pop.classList.add('hidden');
+});
+
+// Ensure floating QA shows/hides based on page context if needed
+function setCameraQaVisibility(visible) {
+    const el = document.getElementById('camera-qa-overlay');
+    if (!el) return;
+    el.style.display = visible ? 'flex' : 'none';
+}
+
+
+// Auto Roll-call
+let autoRollcallInterval = null;
+function toggleAutoRollcall() {
+    if (!autoRollcallInterval) {
+        autoRollcallInterval = setInterval(() => {
+            // mark all saved faces as present (demo)
+            const now = new Date().toLocaleTimeString('vi-VN');
+            const records = JSON.parse(localStorage.getItem('faceguard_attendance') || '[]');
+            savedFaces.forEach(f => records.push({ id: f.id, name: f.name, time: now }));
+            localStorage.setItem('faceguard_attendance', JSON.stringify(records));
+            addNotification('info', 'Điểm danh tự động', `Đã ghi nhận ${savedFaces.length} học sinh lúc ${now}`);
+            showToast('✅ Auto Roll-call: đã ghi nhận danh sách', false);
+        }, 60000); // every 60s demo
+        document.getElementById('auto-rollcall-btn').classList.add('bg-emerald-600');
+    } else {
+        clearInterval(autoRollcallInterval); autoRollcallInterval = null; document.getElementById('auto-rollcall-btn').classList.remove('bg-emerald-600'); showToast('🔕 Auto Roll-call đã tắt', false);
+    }
+}
+
+function exportAttendanceCsv() {
+    const records = JSON.parse(localStorage.getItem('faceguard_attendance') || '[]');
+    if (!records.length) return showToast('Không có dữ liệu điểm danh để xuất', true);
+    const rows = [['ID','Họ tên','Thời gian']];
+    records.forEach(r => rows.push([r.id, r.name, r.time]));
+    const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'attendance.csv'; link.click();
+    showToast('📥 CSV điểm danh đã tải xuống', false);
+}
+
+
 window.onload = function() {
     initTailwind();
     console.log('%c🚀 FaceGuard AI Pro v3.3 - ĐÃ HOÀN THÀNH FULL!', 'color:#f59e0b; font-size:22px; font-weight:700');
@@ -1513,6 +1771,9 @@ window.onload = function() {
     try { window.aiChatHistory = JSON.parse(sessionStorage.getItem('faceguard_ai_chat') || '[]'); if (window.aiChatHistory && window.aiChatHistory.length) { document.getElementById('ai-cloud-chat').innerHTML = ''; window.aiChatHistory.forEach(m=> addCloudChatMessage(m.sender, m.text, m.sender==='Bạn')); } } catch(e){}
     // render notification center badge
     try { renderNotificationCenter(); } catch(e){}
+    // apply theme and QA state from last session
+    try { applyThemeOnLoad(); } catch(e){}
+    try { applyQaStateOnLoad(); } catch(e){}
     
     renderMainMenu();
     renderSavedFaces();
@@ -1539,6 +1800,8 @@ window.onload = function() {
     
     console.log('✅ Mô hình AI thật + Cơ sở dữ liệu + Anti-Smoking + Giám sát hệ thống đã sẵn sàng!');
     showToast('✅ FaceGuard AI Pro v3.3 đã chạy đầy đủ!', false);
+    // hide global loader on full load
+    try { hideLoader(); } catch(e){}
 };
 
 // Real-time stats widget
