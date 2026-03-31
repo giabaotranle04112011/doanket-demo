@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-api@0.0.7/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
@@ -82,7 +84,16 @@
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
             <i class="fas fa-shield-alt text-3xl text-emerald-500"></i>
-            <h1 class="text-3xl font-bold tracking-tighter">FaceGuard
+            <!-- Quick access: Notification bell and Help -->
+            <div class="relative">
+                <button id="notif-bell" onclick="toggleNotificationCenter()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Thông báo">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notif-count" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+            <button onclick="showUsageGuide()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Hướng dẫn">
+                <i class="fas fa-question-circle text-xl"></i>
+            </button>
                 <span class="ai-badge text-emerald-400 text-xl font-semibold">AI Pro v3.3</span>
             </h1>
             <span class="text-xs bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1 rounded-3xl font-semibold flex items-center gap-1 smoking-badge">
@@ -113,6 +124,23 @@
                     <div class="live-dot"></div>
                     <span id="ai-models-text">face-api + COCO-SSD REAL + Anti-Smoking</span>
                 </div>
+
+                <!-- Quick Actions Bar -->
+                <div class="mt-4 flex items-center gap-3">
+                    <button onclick="toggleMultiCamera()" id="btn-multi-camera" class="px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-3xl flex items-center gap-2">
+                        <i class="fas fa-th-large"></i> Chế độ Nhiều Camera (4)
+                    </button>
+                    <button onclick="recordSession()" id="btn-record-session" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-3xl text-white flex items-center gap-2">
+                        <i class="fas fa-circle" style="color:#ff3860"></i> Ghi hình phiên
+                    </button>
+                    <button onclick="simulateAIDetection()" class="px-4 py-3 bg-amber-600 hover:bg-amber-700 rounded-3xl text-white flex items-center gap-2">
+                        <i class="fas fa-bolt"></i> Mô phỏng vi phạm
+                    </button>
+                    <button onclick="toggleNotificationsEnabled()" id="btn-toggle-notifs" class="px-4 py-3 bg-violet-600 hover:bg-violet-700 rounded-3xl text-white flex items-center gap-2">
+                        <i class="fas fa-bell"></i> Bật thông báo
+                    </button>
+                </div>
+
             </div>
             <div id="user-info" class="flex items-center gap-2 hidden">
                 <div class="text-right">
@@ -271,6 +299,9 @@
                     <button onclick="sendCloudChatMessage()" class="px-6 bg-violet-600 hover:bg-violet-700 rounded-3xl font-medium flex items-center justify-center transition-all active:scale-95">
                         <i class="fas fa-paper-plane"></i>
                     </button>
+                    <button onclick="clearAIChatHistory()" class="px-4 bg-gray-800 hover:bg-gray-700 rounded-3xl font-medium flex items-center gap-2">
+                        <i class="fas fa-trash"></i> Xóa lịch sử
+                    </button>
                 </div>
                 <p class="text-[10px] text-gray-400 text-center mt-2">Hỗ trợ Grok, GPT-4o, Gemini, Claude, DeepSeek</p>
             </div>
@@ -308,6 +339,28 @@
                             <i class="fas fa-brain"></i> LƯU VÀO MÔ HÌNH AI (128D)
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BÁO CÁO (REPORTS) -->
+        <div id="page-reports" class="hidden bg-gray-900 rounded-3xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold flex items-center gap-3"><i class="fas fa-file-chart-column"></i> Báo cáo thông minh</h2>
+                <div class="flex gap-3">
+                    <button onclick="exportCsv()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-3xl flex items-center gap-2 text-sm">CSV 1 click</button>
+                    <button onclick="previewPdfReport()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 rounded-3xl flex items-center gap-2 text-sm">Preview PDF</button>
+                    <button onclick="aiSummarizeReport()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-3xl flex items-center gap-2 text-sm">Tóm tắt bằng AI</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 rounded-3xl p-4">
+                    <h4 class="font-semibold mb-3">Tổng quan vi phạm</h4>
+                    <div id="report-summary" class="text-sm text-gray-300">Không có dữ liệu.</div>
+                </div>
+                <div class="bg-gray-800 rounded-3xl p-4">
+                    <h4 class="font-semibold mb-3">Preview / Export</h4>
+                    <div id="pdf-preview" class="bg-gray-900 rounded-2xl p-4 min-h-[200px] text-sm text-gray-300">Preview sẽ hiển thị ở đây.</div>
                 </div>
             </div>
         </div>
@@ -567,6 +620,24 @@
     </div>
 </div>
 
+<!-- USAGE GUIDE MODAL -->
+<div id="usage-guide-modal" onclick="if(event.target.id==='usage-guide-modal')this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[10000] flex items-center justify-center">
+    <div class="bg-gray-900 rounded-3xl p-8 max-w-2xl w-full mx-4 modal-pop">
+        <h3 class="text-2xl font-bold mb-4">❓ Hướng dẫn sử dụng FaceGuard AI Pro</h3>
+        <div class="space-y-4 text-sm text-gray-300">
+            <p><strong>Phím tắt:</strong> <br> - <strong>Bật/Tắt giám sát:</strong> nói "bật giám sát" / "tắt giám sát" via Voice AI.<br> - <strong>Mô phỏng vi phạm:</strong> nói "mô phỏng vi phạm" hoặc nhấn nút trên Quick Actions.</p>
+            <p><strong>Trung tâm Thông báo:</strong> Nhấn chuông 🛎️ để xem thông báo realtime (hút thuốc, vi phạm, camera...). Cho phép thông báo trình duyệt để nhận alert khi tab khác đang mở.</p>
+            <p><strong>Chế độ Nhiều Camera:</strong> Nhấn "Chế độ Nhiều Camera (4)" để mở thêm 3 góc camera mô phỏng.</p>
+            <p><strong>Ghi hình phiên:</strong> Nhấn "Ghi hình phiên" để ghi demo 12 giây và lưu video (.webm).</p>
+            <p><strong>Báo cáo thông minh:</strong> Mở trang Báo cáo → Xuất CSV / Preview PDF, hoặc Tóm tắt bằng AI Cloud.</p>
+            <p><strong>Voice Commands:</strong> Hỗ trợ lệnh thoại: "bật giám sát", "tắt giám sát", "mô phỏng vi phạm", "mở camera", "tóm tắt báo cáo", "xuất csv".</p>
+        </div>
+        <div class="mt-6 flex gap-3 justify-end">
+            <button onclick="document.getElementById('usage-guide-modal').classList.add('hidden')" class="py-2 px-4 bg-gray-800 rounded-3xl">Đóng</button>
+        </div>
+    </div>
+</div>
+
 <!-- VERSION MODAL -->
 <div id="version-modal" onclick="if(event.target.id==='version-modal')this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[10000] flex items-center justify-center">
     <div class="bg-gray-900 rounded-3xl p-8 max-w-md text-center modal-pop">
@@ -589,6 +660,22 @@
 <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-8 right-8 bg-emerald-600 text-white px-8 py-5 rounded-3xl shadow-2xl flex items-center gap-3 text-lg z-[10000] transition-all">
     <i class="fas fa-check-circle"></i>
     <span id="toast-text" class="font-semibold"></span>
+</div>
+
+<!-- NOTIFICATION CENTER -->
+<div id="notification-center" class="hidden fixed top-16 right-8 w-96 bg-gray-900 border border-gray-800 rounded-3xl p-4 z-[10001] shadow-2xl">
+    <div class="flex items-center justify-between mb-3">
+        <h4 class="font-semibold">Trung tâm Thông báo</h4>
+        <div class="flex items-center gap-2">
+            <button onclick="clearAllNotifications()" class="text-xs text-gray-400 hover:text-white">Xóa tất cả</button>
+            <button onclick="toggleNotificationCenter()" class="text-xs text-gray-400 hover:text-white">Đóng</button>
+        </div>
+    </div>
+    <div id="notification-list" class="max-h-64 overflow-y-auto"></div>
+    <div class="mt-3 text-xs text-gray-400">Cho phép thông báo trình duyệt để nhận alert khi tab khác đang mở.</div>
+    <div class="mt-3 flex gap-2">
+        <button onclick="toggleNotificationsEnabled()" class="flex-1 py-2 bg-emerald-600 rounded-2xl text-sm">Bật/Tắt Notification API</button>
+    </div>
 </div>
 
 <script>
@@ -696,6 +783,12 @@ function addCloudChatMessage(sender, text, isUser) {
     `;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+    // Save to session history for AI Cloud Memory
+    try {
+        window.aiChatHistory = window.aiChatHistory || JSON.parse(sessionStorage.getItem('faceguard_ai_chat') || '[]');
+        window.aiChatHistory.push({ time: new Date().toLocaleTimeString('vi-VN'), sender, text });
+        sessionStorage.setItem('faceguard_ai_chat', JSON.stringify(window.aiChatHistory));
+    } catch (e) {}
     return div;
 }
 
@@ -779,6 +872,7 @@ function showSmokingViolationAlert() {
         </div>`;
     setTimeout(() => { if (resultDiv) resultDiv.innerHTML = ''; }, 8000);
     showToast("🚬 AI đã phát hiện hút thuốc lá!", false);
+    try { addNotification('warning', 'Phát hiện hút thuốc', 'AI đã phát hiện hút thuốc lá (COCO-SSD)'); } catch(e){}
 }
 
 function drawAIDetections(canvasId, faces = 3) {
@@ -896,6 +990,7 @@ async function simulateAIDetection() {
     localStorage.setItem('faceguard_violations', JSON.stringify(violationsLog));
     if (aiApiKey) addCloudChatMessage("Hệ thống", `🚨 Gian lận mới: ${reason}`, false);
     showToast("AI Cloud đã phân tích và ghi log vào DB!", false);
+    try { addNotification('error', 'Phát hiện gian lận', aiMessage); } catch(e){}
     setTimeout(() => { if (resultDiv) resultDiv.innerHTML = ''; }, 12000);
 }
 
@@ -916,7 +1011,17 @@ function toggleVoiceAI() {
         voiceRecognition.onresult = async (event) => {
             const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
             document.getElementById('voice-status').innerHTML = `“${transcript.substring(0, 22)}...”`;
-            if (transcript.includes('đáp án') || transcript.includes('bạn') || transcript.includes('giúp') || transcript.includes('cheat') || transcript.includes('thuốc') || transcript.includes('hút')) {
+            // Direct voice commands
+            if (transcript.includes('bật giám sát')) { if (!isMonitoring) toggleMonitoring(); }
+            else if (transcript.includes('tắt giám sát')) { if (isMonitoring) toggleMonitoring(); }
+            else if (transcript.includes('mô phỏng vi phạm')) { simulateAIDetection(); }
+            else if (transcript.includes('mở camera')) { startCamera('video-dashboard'); }
+            else if (transcript.includes('mở báo cáo') || transcript.includes('báo cáo')) { switchPage('page-reports'); }
+            else if (transcript.includes('tóm tắt')) { aiSummarizeReport(); }
+            else if (transcript.includes('xuất csv')) { exportCsv(); }
+            else if (transcript.includes('bật thông báo')) { toggleNotificationsEnabled(); }
+            // heuristic detection (cheat/smoking)
+            if (transcript.includes('đáp án') || transcript.includes('cheat') || transcript.includes('thuốc') || transcript.includes('hút')) {
                 simulateAIDetection();
                 if (aiApiKey) {
                     const analysis = await callAICloud(`Phân tích transcript: "${transcript}". Có dấu hiệu gian lận hoặc hút thuốc không?`);
@@ -1179,6 +1284,7 @@ function renderMainMenu() {
         <a onclick="switchPage('page-attendance')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-list-check"></i> Điểm danh AI</a>
         <a onclick="switchPage('page-advanced-analytics')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-chart-bar"></i> Phân tích AI</a>
         <a onclick="switchPage('page-violations-db')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-database"></i> Cơ sở dữ liệu vi phạm</a>
+        <a onclick="switchPage('page-reports')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-file-alt"></i> Báo cáo</a>
         <a onclick="switchPage('page-system-monitor')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all bg-amber-900/30"><i class="fas fa-server"></i> Giám sát Hệ thống</a>
         ${currentUser && currentUser.role === 'Admin' ? `<a onclick="switchPage('page-admin')" class="flex items-center gap-3 px-6 py-4 hover:bg-gray-800 rounded-3xl transition-all"><i class="fas fa-cog"></i> Quản trị AI</a>` : ''}
     `;
@@ -1252,6 +1358,145 @@ function showToast(text, isError = false) {
 }
 
 // ==================== KHỞI ĐỘNG ====================
+// ==================== NOTIFICATIONS, MULTI-CAMERA, REPORTS, VOICE COMMANDS ====================
+let notifications = JSON.parse(localStorage.getItem('faceguard_notifs') || '[]');
+let notificationsEnabled = localStorage.getItem('faceguard_notifs_enabled') === '1';
+function toggleNotificationCenter() {
+    const el = document.getElementById('notification-center');
+    if (!el) return;
+    el.classList.toggle('hidden');
+    renderNotificationCenter();
+}
+function renderNotificationCenter() {
+    const list = document.getElementById('notification-list');
+    if (!list) return;
+    if (notifications.length === 0) {
+        list.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">Không có thông báo mới.</div>';
+    } else {
+        list.innerHTML = notifications.map(n => `
+            <div class="p-3 border-b border-gray-800 flex justify-between items-start">
+                <div>
+                    <div class="font-semibold">${n.title}</div>
+                    <div class="text-xs text-gray-400 mt-1">${n.msg}</div>
+                    <div class="text-[10px] text-gray-500 mt-2">${n.time}</div>
+                </div>
+                <button onclick="dismissNotification(${n.id})" class="text-xs text-red-400">Xóa</button>
+            </div>
+        `).join('');
+    }
+    const badge = document.getElementById('notif-count');
+    if (notifications.length > 0) { badge.textContent = notifications.length; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+}
+function addNotification(type, title, msg) {
+    const n = { id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), type, title, msg };
+    notifications.unshift(n);
+    if (notifications.length > 100) notifications.pop();
+    localStorage.setItem('faceguard_notifs', JSON.stringify(notifications));
+    renderNotificationCenter();
+    try {
+        if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: msg });
+        } else if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'denied') {
+            Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body: msg }); });
+        }
+    } catch (e) {}
+}
+function dismissNotification(id) { notifications = notifications.filter(n => n.id !== id); localStorage.setItem('faceguard_notifs', JSON.stringify(notifications)); renderNotificationCenter(); }
+function clearAllNotifications() { if (confirm('Xóa toàn bộ thông báo?')) { notifications = []; localStorage.setItem('faceguard_notifs', '[]'); renderNotificationCenter(); } }
+function toggleNotificationsEnabled() { notificationsEnabled = !notificationsEnabled; localStorage.setItem('faceguard_notifs_enabled', notificationsEnabled ? '1' : '0'); showToast(notificationsEnabled ? '✅ Thông báo trình duyệt đã bật' : '🔕 Thông báo đã tắt', false); if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'granted') Notification.requestPermission(); }
+
+// Multi-camera simulation
+let multiCameraActive = false;
+function toggleMultiCamera() {
+    multiCameraActive = !multiCameraActive;
+    const btn = document.getElementById('btn-multi-camera');
+    if (multiCameraActive) {
+        btn.classList.add('bg-red-600');
+        // create simulated camera overlays
+        for (let i = 1; i <= 3; i++) {
+            if (!document.getElementById('video-multi-' + i)) {
+                const el = document.createElement('div');
+                el.className = 'mt-4 grid grid-cols-3 gap-3';
+                el.id = 'multi-cam-row';
+                el.innerHTML = `
+                    <div class="camera-container aspect-video relative"><video id="video-multi-1" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-1" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
+                    <div class="camera-container aspect-video relative"><video id="video-multi-2" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-2" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
+                    <div class="camera-container aspect-video relative"><video id="video-multi-3" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-3" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
+                `;
+                document.getElementById('camera-dashboard').insertAdjacentElement('afterend', el);
+                // simulate draws
+                setTimeout(() => { drawAIDetections('ai-overlay-multi-1', 2); drawAIDetections('ai-overlay-multi-2', 2); drawAIDetections('ai-overlay-multi-3', 2); }, 600);
+                break;
+            }
+        }
+        showToast('🔀 Chế độ Nhiều Camera (4) đã bật', false);
+    } else {
+        btn.classList.remove('bg-red-600');
+        const row = document.getElementById('multi-cam-row'); if (row) row.remove();
+        showToast('🔁 Chế độ Nhiều Camera đã tắt', false);
+    }
+}
+
+// Record session (12s demo)
+async function recordSession() {
+    const video = document.getElementById('video-dashboard');
+    if (!video || !video.srcObject) return showToast('Mở camera trước khi ghi hình!', true);
+    const mediaStream = video.srcObject;
+    const recorder = new MediaRecorder(mediaStream);
+    const chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `faceguard-session-${Date.now()}.webm`; a.click();
+        addNotification('info', 'Ghi hình hoàn tất', 'Phiên giám sát đã được lưu (demo)');
+        showToast('✅ Phiên ghi hình đã lưu (demo)', false);
+    };
+    recorder.start();
+    showToast('⏺️ Đang ghi (12 giây demo)...', false);
+    setTimeout(() => recorder.stop(), 12000);
+}
+
+// Reports export functions
+function exportCsv() {
+    const rows = [['Thời gian','Học sinh','Loại','Mô tả','Confidence']];
+    violationsLog.forEach(v => rows.push([v.time, v.student, v.type, v.desc, v.confidence]));
+    const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'faceguard-violations.csv'; link.click();
+    showToast('📥 CSV đã được tải xuống', false);
+}
+async function previewPdfReport() {
+    const preview = document.getElementById('pdf-preview');
+    preview.innerHTML = '<div class="text-sm text-gray-400">Đang tạo preview PDF...</div>';
+    // simple HTML snapshot
+    const node = document.createElement('div');
+    node.innerHTML = `<h2>Báo cáo vi phạm</h2><ul>${violationsLog.map(v=>`<li>${v.time} - ${v.student} - ${v.type} - ${v.confidence}</li>`).join('')}</ul>`;
+    await html2canvas(node).then(canvas => { document.getElementById('pdf-preview').innerHTML = ''; document.getElementById('pdf-preview').appendChild(canvas); });
+}
+async function aiSummarizeReport() {
+    if (!aiApiKey) return showToast('Kết nối AI Cloud trước khi tóm tắt', true);
+    const prompt = `Tóm tắt ngắn các vi phạm trong phiên: ${JSON.stringify(violationsLog.slice(0,10))}`;
+    const res = await callAICloud(prompt);
+    document.getElementById('report-summary').innerText = res;
+    addCloudChatMessage('Hệ thống', 'Tóm tắt báo cáo đã tạo bởi AI', false);
+}
+
+// AI Cloud chat history control
+function clearAIChatHistory() { if (confirm('Xóa lịch sử AI Cloud trong phiên?')) { sessionStorage.removeItem('faceguard_ai_chat'); window.aiChatHistory = []; document.getElementById('ai-cloud-chat').innerHTML = '<div class="text-center text-xs text-gray-400 py-4">👋 AI Cloud Assistant (Grok) sẵn sàng hỗ trợ bạn 24/7</div>'; showToast('🧠 Đã xóa lịch sử AI Cloud trong phiên', false); } }
+
+function showUsageGuide() { document.getElementById('usage-guide-modal').classList.remove('hidden'); }
+
+function exportPdfReport() {
+    const doc = new jspdf.jsPDF();
+    let y = 10;
+    doc.setFontSize(14); doc.text('Báo cáo vi phạm FaceGuard', 14, y); y += 8;
+    doc.setFontSize(10);
+    violationsLog.slice(0, 40).forEach(v => { doc.text(`${v.time} • ${v.student} • ${v.type} • ${v.confidence}`, 14, y); y += 6; if (y > 280) { doc.addPage(); y = 10; } });
+    doc.save('faceguard-report.pdf');
+    showToast('✅ PDF đã được xuất', false);
+}
+
 window.onload = function() {
     initTailwind();
     console.log('%c🚀 FaceGuard AI Pro v3.3 - ĐÃ HOÀN THÀNH FULL!', 'color:#f59e0b; font-size:22px; font-weight:700');
@@ -1264,6 +1509,10 @@ window.onload = function() {
     
     const chatContainer = document.getElementById('ai-cloud-chat');
     chatContainer.innerHTML = `<div class="text-center text-xs text-gray-400 py-4">👋 AI Cloud Assistant (Grok) sẵn sàng hỗ trợ bạn 24/7</div>`;
+    // restore AI chat history in session
+    try { window.aiChatHistory = JSON.parse(sessionStorage.getItem('faceguard_ai_chat') || '[]'); if (window.aiChatHistory && window.aiChatHistory.length) { document.getElementById('ai-cloud-chat').innerHTML = ''; window.aiChatHistory.forEach(m=> addCloudChatMessage(m.sender, m.text, m.sender==='Bạn')); } } catch(e){}
+    // render notification center badge
+    try { renderNotificationCenter(); } catch(e){}
     
     renderMainMenu();
     renderSavedFaces();
