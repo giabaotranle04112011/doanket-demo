@@ -1,6 +1,273 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <style>
+    body {
+        margin: 0;
+        background: #000;
+    }
+
+    /* Island (always visible) */
+    .island {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 140px;
+        height: 44px;
+        background: #000; /* default black */
+        border-radius: 999px;
+        transition: all 0.32s cubic-bezier(0.2, 0, 0.2, 1);
+        cursor: pointer;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        gap: 10px;
+        box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    }
+
+    .island .island-inner { display:flex; align-items:center; gap:10px; width:100%; }
+    .island .meta { display:flex; flex-direction:column; min-width:0; opacity: 0; transform: translateX(6px); transition: opacity .28s ease, transform .28s ease }
+    .island .title { font-size:13px; font-weight:700; color:#e6eef8; line-height:1 }
+    .island .sub { font-size:11px; color:#b7c6d9; opacity:0.9 }
+
+    /* expanded state (manual click) */
+    .island.active { width: 340px; height: 86px; border-radius:20px; padding:12px 18px }
+    .island.active .thumb { width:56px; height:56px; border-radius:12px }
+    .island.active .title { font-size:15px }
+
+    /* reveal meta when active/enhanced/alert */
+    .island.active .meta, .island.enhanced .meta, .island.alert .meta { opacity:1; transform: translateX(0) }
+
+    /* enhanced effects when toggled on */
+    .island.enhanced { box-shadow: 0 28px 60px rgba(99,102,241,0.18), 0 8px 40px rgba(6,182,212,0.06); border: 1px solid rgba(124,58,237,0.12); transform: translateX(-50%) translateY(-2px) scale(1.02); }
+    .island.enhanced .thumb { filter: drop-shadow(0 8px 24px rgba(124,58,237,0.22)); }
+
+    /* alert pulse used by events */
+    .island.alert { animation: island-alert 1.9s cubic-bezier(.2,.9,.3,1); }
+    @keyframes island-alert { 0%{ transform:translateX(-50%) scale(.98) } 30%{ transform:translateX(-50%) scale(1.06) } 60%{ transform:translateX(-50%) scale(1.02) } 100%{ transform:translateX(-50%) scale(1) } }
+
+    /* pop/slide animation for new events */
+    .island.pop { animation: island-pop 0.6s cubic-bezier(.2,.9,.3,1); }
+    @keyframes island-pop { 0% { transform: translateX(-50%) translateY(-8px) scale(.96); opacity:0 } 60% { transform: translateX(-50%) translateY(2px) scale(1.04); opacity:1 } 100% { transform: translateX(-50%) translateY(0) scale(1); opacity:1 } }
+
+    /* idle breathing when enhanced */
+    @keyframes island-breathe { 0%{ transform:translateX(-50%) translateY(0) scale(1) } 50%{ transform:translateX(-50%) translateY(-2px) scale(1.01) } 100%{ transform:translateX(-50%) translateY(0) scale(1) } }
+    .island.enhanced:not(.active) { animation: island-breathe 6s ease-in-out infinite }
+
+    /* small toggle button inside island */
+    .island-toggle-btn { position:absolute; right:8px; top:8px; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.03); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; border:1px solid rgba(255,255,255,0.04); cursor:pointer }
+
+    /* Face ID style scan inside thumb */
+    .island .thumb { position:relative; overflow:hidden; }
+    .island .thumb.scanning { box-shadow: 0 10px 40px rgba(124,58,237,0.18); transform: scale(1.02); }
+    .scan-ring { position:absolute; left:-8px; top:-8px; width:calc(100% + 16px); height:calc(100% + 16px); border-radius:12px; border:2px solid rgba(255,255,255,0.04); box-shadow: 0 0 20px rgba(124,58,237,0.06); pointer-events:none; animation: ring-fade 1.2s ease-in-out infinite; mix-blend-mode:screen }
+    .scan-beam { position:absolute; left:-120%; top:0; width:240%; height:100%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0) 100%); transform: translateX(-120%); pointer-events:none; animation: beam-swipe 1.1s linear forwards }
+    @keyframes beam-swipe { 0% { transform: translateX(-120%); } 40% { transform: translateX(-10%); } 100% { transform: translateX(120%); opacity:0 } }
+    @keyframes ring-fade { 0% { opacity: 0.08; transform: scale(.96) } 50% { opacity: 0.22; transform: scale(1.04) } 100% { opacity: 0.08; transform: scale(.96) } }
+
+    /* small success tick overlay */
+    .scan-success { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; font-size:18px; color:#0f5132; background: radial-gradient(closest-side, rgba(34,197,94,0.14), rgba(34,197,94,0.04)); border-radius:12px; }
+
+    .island-toggle-btn.active { background:linear-gradient(90deg,#7c3aed,#a78bfa); box-shadow:0 10px 30px rgba(124,58,237,0.18) }
+
+    /* hover subtle scale */
+    .island:hover { transform: translateX(-50%) scale(1.02); }
+
+    /* premium island visuals */
+    .island::before { content: ''; position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; background: linear-gradient(90deg, rgba(124,58,237,0.06), rgba(6,182,212,0.04)); mix-blend-mode: screen; opacity: 0; transition: opacity .35s ease; }
+    .island.enhanced::before { opacity: 1; }
+    .island .icon { width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background: rgba(255,255,255,0.03); color:#fff; font-size:12px; margin-right:6px }
+    .island .thumb img { width:100%; height:100%; object-fit:cover; border-radius:8px }
+
+    /* progress bar shown during timed events */
+    .island .progress { position:absolute; left:8px; right:8px; bottom:-6px; height:6px; background: rgba(255,255,255,0.03); border-radius:999px; overflow:hidden; opacity:0; transform: translateY(4px); transition: opacity .25s ease, transform .25s ease }
+    .island.show-progress .progress { opacity:1; transform: translateY(0) }
+    .island .progress .bar { height:100%; width:0%; background: linear-gradient(90deg,#06b6d4,#7c3aed); transition: width linear }
+
+    /* reveal meta when show-meta is set */
+    .island.show-meta .meta { opacity:1; transform: translateX(0) }
+    </style>
+    </head>
+
+    <body>
+
+    <div class="island" id="island" role="status" aria-live="polite" aria-label="Trạng thái hệ thống" aria-hidden="false">
+        <div class="island-inner">
+            <div id="island-icon" class="icon" style="display:none"></div>
+            <div class="thumb" id="island-thumb">
+                <div class="scan-ring hidden" id="island-scan-ring"></div>
+                <div class="scan-beam hidden" id="island-scan-beam"></div>
+                <div class="scan-success hidden" id="island-scan-success"><i class="fas fa-check-circle"></i></div>
+            </div>
+            <div class="meta">
+                <div class="title" id="island-title"></div>
+                <div class="sub" id="island-sub"></div>
+            </div>
+        </div>
+        <div class="progress" id="island-progress" aria-hidden="true"><div class="bar" id="island-progress-bar"></div></div>
+        <button id="island-toggle-effects" class="island-toggle-btn" title="Bật/Tắt hiệu ứng" onclick="toggleIslandEffects()">☆</button>
+    </div>
+
+    <script>
+    const island = document.getElementById('island');
+    const islandTitle = document.getElementById('island-title');
+    const islandSub = document.getElementById('island-sub');
+    const islandToggleBtn = document.getElementById('island-toggle-effects');
+
+    // click để bung ra / thu lại
+    island.addEventListener('click', (e) => {
+        // if clicked the small toggle button, ignore expanding
+        if (e.target === islandToggleBtn) return;
+        island.classList.toggle('active');
+    });
+
+    // effects control
+    function setIslandEffects(enabled){
+        if(enabled) island.classList.add('enhanced'); else island.classList.remove('enhanced');
+        try{ localStorage.setItem('island_effects_enabled', enabled ? '1':'0'); }catch(e){}
+        updateIslandToggle();
+    }
+
+    function toggleIslandEffects(){ setIslandEffects(!island.classList.contains('enhanced')); }
+
+    function updateIslandToggle(){
+        if(island.classList.contains('enhanced')){
+            islandToggleBtn.textContent = '✨';
+            islandToggleBtn.classList.add('active');
+        } else {
+            islandToggleBtn.textContent = '☆';
+            islandToggleBtn.classList.remove('active');
+        }
+    }
+
+    // temporary alert pulse for events
+    function pulseIsland(){
+        island.classList.add('alert');
+        setTimeout(()=> island.classList.remove('alert'), 2000);
+    }
+
+    // update island content (title/sub and optional color)
+    function updateIslandContent(title, sub, color) {
+        if (title !== undefined) islandTitle.textContent = title;
+        if (sub !== undefined) islandSub.textContent = sub;
+        const thumb = document.getElementById('island-thumb');
+        if (thumb && color) thumb.style.background = color;
+    }
+
+    // show an island event: richer visuals with icon/thumbnail/progress (reusing elements)
+    function showIslandEvent(title, sub, opts = {}){
+        try{
+            const prevEnhanced = island.classList.contains('enhanced');
+            updateIslandContent(title || islandTitle.textContent, sub || islandSub.textContent, opts.color || undefined);
+            if(!island.classList.contains('active')) island.classList.add('show-meta');
+
+            const thumb = document.getElementById('island-thumb');
+            const islandIcon = document.getElementById('island-icon');
+            const progWrap = document.getElementById('island-progress');
+            const progBar = document.getElementById('island-progress-bar');
+
+            // thumbnail handling
+            if(thumb){
+                // clear img if present
+                const existingImg = thumb.querySelector('img'); if(existingImg) existingImg.remove();
+                if(opts.thumb){
+                    const img = document.createElement('img'); img.src = opts.thumb; img.alt = opts.title || 'thumb'; thumb.appendChild(img);
+                } else {
+                    // set decorative background color
+                    thumb.style.background = opts.color || 'linear-gradient(90deg,#06b6d4,#7c3aed)';
+                }
+            }
+
+            // icon handling (reuse)
+            if(islandIcon){
+                if(opts.icon){ islandIcon.style.display = ''; islandIcon.innerHTML = `<i class="${opts.icon}"></i>`; }
+                else { islandIcon.style.display = 'none'; islandIcon.innerHTML = ''; }
+            }
+
+            if(opts.enhance) island.classList.add('enhanced');
+
+            // pop + pulse
+            island.classList.add('pop'); pulseIsland();
+            setTimeout(()=> island.classList.remove('pop'), 700);
+
+            // progress reuse
+            if(progWrap && progBar){
+                if(opts.duration && opts.duration > 200){
+                    progBar.style.transition = 'none'; progBar.style.width = '0%';
+                    requestAnimationFrame(()=>{
+                        island.classList.add('show-progress');
+                        progBar.style.transition = `width ${opts.duration}ms linear`;
+                        progBar.style.width = '100%';
+                    });
+                    setTimeout(()=>{ island.classList.remove('show-progress'); progBar.style.width = '0%'; }, opts.duration + 240);
+                }
+            }
+
+            // cleanup after duration
+            if (opts.duration) setTimeout(()=>{
+                if(!island.classList.contains('active')) island.classList.remove('show-meta');
+                if (!prevEnhanced && !opts.keepEnhanced) island.classList.remove('enhanced');
+                if(opts.icon && islandIcon) { islandIcon.style.display = 'none'; islandIcon.innerHTML = ''; }
+            }, (opts.duration || 1800) + 300);
+
+        }catch(e){ console.error(e); }
+    }
+
+    // Expose simple API for other parts of app
+    window.setIslandEffects = setIslandEffects;
+    window.toggleIslandEffects = toggleIslandEffects;
+    window.pulseIsland = pulseIsland;
+
+    // Face ID style scan animation — reuses island elements to avoid DOM churn
+    function scanFaceId({duration = 1100, success = true, color} = {}){
+        return new Promise(resolve => {
+            const thumb = document.getElementById('island-thumb');
+            const ring = document.getElementById('island-scan-ring');
+            const beam = document.getElementById('island-scan-beam');
+            const okEl = document.getElementById('island-scan-success');
+            if (!thumb) return resolve();
+            thumb.classList.add('scanning');
+            if(color) thumb.style.background = color;
+            island.classList.add('enhanced');
+            // show ring + beam
+            if(ring) ring.classList.remove('hidden');
+            if(beam) { beam.classList.remove('hidden'); beam.style.animation = 'none'; void beam.offsetWidth; beam.style.animation = null; }
+            if(okEl) okEl.classList.add('hidden');
+            // after duration show success/fail
+            setTimeout(()=>{
+                if(success){
+                    if(okEl) okEl.classList.remove('hidden');
+                    try{ updateIslandContent('Face ID xác thực','Chào mừng', color); }catch(e){}
+                } else {
+                    try{ updateIslandContent('Xác thực thất bại','Vui lòng thử lại', '#222'); }catch(e){}
+                }
+                pulseIsland();
+                // cleanup
+                setTimeout(()=>{
+                    if(ring) ring.classList.add('hidden');
+                    if(beam) beam.classList.add('hidden');
+                    if(okEl) okEl.classList.add('hidden');
+                    thumb.classList.remove('scanning');
+                    try{ if(localStorage.getItem('island_effects_enabled') !== '1') { thumb.style.background = ''; island.classList.remove('enhanced'); } }catch(e){}
+                    resolve(success);
+                }, 700);
+            }, duration);
+        });
+    }
+    window.scanFaceId = scanFaceId;
+
+    // Initialize from preference
+    (function(){
+        try{
+            const v = localStorage.getItem('island_effects_enabled');
+            setIslandEffects(v === '1');
+        }catch(e){ setIslandEffects(false); }
+        // rely on CSS animations for breathing to avoid JS intervals (reduces jank)
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FaceGuard AI Pro v3.3 - Nâng Cấp 2026 (Full + Giám sát Hệ thống)</title>
@@ -77,6 +344,12 @@
         }
     </style>
     <style>
+        /* small pulse & glow when alerting */
+        #dynamic-island.alert { transform: translateX(-50%) translateY(0) scale(1); box-shadow:0 26px 60px rgba(99,102,241,0.22), 0 12px 30px rgba(16,185,129,0.08); border-color: rgba(99,102,241,0.25); }
+        #dynamic-island.alert .island-inner { animation: island-pop .42s cubic-bezier(.2,.9,.3,1); }
+        @keyframes island-pop { 0%{ transform: translateY(-8px) scale(.98) } 60%{ transform: translateY(0) scale(1.02) } 100%{ transform: translateY(0) scale(1) } }
+        /* compact responsive */
+        @media (max-width:880px){ #dynamic-island .island-inner{ min-width:180px; gap:8px; padding:8px 10px } .island-title{font-size:12px} .island-sub{display:none} }
         /* Light mode overrides for common dark utility classes (simple but effective) */
         body.light { background: #f8fafc !important; color: #0f172a !important; }
         body.light .bg-gray-900 { background-color: #ffffff !important; }
@@ -297,6 +570,8 @@
         </div>
     </div>
 </nav>
+
+ 
 
 <div class="max-w-7xl mx-auto px-6 py-8">
 
@@ -759,15 +1034,24 @@
     <div class="bg-gray-900 rounded-3xl p-8 max-w-2xl w-full mx-4 modal-pop">
         <h3 class="text-2xl font-bold mb-4">❓ Hướng dẫn sử dụng FaceGuard AI Pro</h3>
         <div class="space-y-4 text-sm text-gray-300">
-            <p><strong>Phím tắt:</strong> <br> - <strong>Bật/Tắt giám sát:</strong> nói "bật giám sát" / "tắt giám sát" via Voice AI.<br> - <strong>Mô phỏng vi phạm:</strong> nói "mô phỏng vi phạm" hoặc nhấn nút trên Quick Actions.</p>
-            <p><strong>Trung tâm Thông báo:</strong> Nhấn chuông 🛎️ để xem thông báo realtime (hút thuốc, vi phạm, camera...). Cho phép thông báo trình duyệt để nhận alert khi tab khác đang mở.</p>
-            <p><strong>Chế độ Nhiều Camera:</strong> Nhấn "Chế độ Nhiều Camera (4)" để mở thêm 3 góc camera mô phỏng.</p>
-            <p><strong>Ghi hình phiên:</strong> Nhấn "Ghi hình phiên" để ghi demo 12 giây và lưu video (.webm).</p>
-            <p><strong>Báo cáo thông minh:</strong> Mở trang Báo cáo → Xuất CSV / Preview PDF, hoặc Tóm tắt bằng AI Cloud.</p>
-            <p><strong>Voice Commands:</strong> Hỗ trợ lệnh thoại: "bật giám sát", "tắt giám sát", "mô phỏng vi phạm", "mở camera", "tóm tắt báo cáo", "xuất csv".</p>
+            <div class="flex gap-3 mb-3">
+                <button onclick="showGuideSection('main')" id="guide-tab-main" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Tổng quan</button>
+                <button onclick="showGuideSection('coco')" id="guide-tab-coco" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Tài liệu COCO-SSD</button>
+                <button onclick="showGuideSection('smoking')" id="guide-tab-smoking" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Hướng dẫn Anti-Smoking</button>
+                <button onclick="showGuideSection('community')" id="guide-tab-community" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Cộng đồng</button>
+            </div>
+
+            <div id="usage-guide-content" class="text-sm text-gray-300">
+                <!-- initial main content rendered by JS -->
+            </div>
+
         </div>
-        <div class="mt-6 flex gap-3 justify-end">
-            <button onclick="document.getElementById('usage-guide-modal').classList.add('hidden')" class="py-2 px-4 bg-gray-800 rounded-3xl">Đóng</button>
+        <div class="mt-6 flex gap-3 justify-between items-center">
+            <div>
+                <button id="usage-demo-face" onclick="scanFaceId({duration:900,success:true,color:'linear-gradient(135deg,#06b6d4,#7c3aed)'})" class="py-2 px-4 bg-emerald-600 rounded-3xl">Demo Face ID</button>
+                <button onclick="document.getElementById('usage-guide-modal').classList.add('hidden')" class="ml-3 py-2 px-4 bg-gray-800 rounded-3xl">Đóng</button>
+            </div>
+            <div class="text-xs text-gray-400">Cần quyền camera cho demo Face ID trực tiếp.</div>
         </div>
     </div>
 </div>
@@ -1083,12 +1367,14 @@ function toggleMonitoring() {
         }, 800);
         logSystemEvent('info', 'Giám sát AI đã bật', '60 FPS + COCO-SSD real-time');
         showToast("🚀 Mô hình AI THẬT COCO-SSD + Anti-Smoking đã kích hoạt!", false);
+        try { showIslandEvent('Giám sát đã bật', 'AI đang phân tích camera', { enhance:false, duration:3200 }); } catch(e){}
     } else {
         clearInterval(recognitionInterval);
         btn.classList.remove('bg-red-600', 'hover:bg-red-700');
         btn.classList.add('bg-emerald-600');
         text.innerHTML = `<i class="fas fa-toggle-on"></i> BẬT GIÁM SÁT AI THẬT`;
         logSystemEvent('info', 'Giám sát AI đã tắt', '');
+        try { showIslandEvent('Giám sát đã tắt', 'AI đã dừng phân tích', { enhance:false, duration:2400 }); } catch(e){}
     }
 }
 
@@ -1123,6 +1409,7 @@ async function simulateAIDetection() {
         </div>`;
     violationsLog.unshift({ time: new Date().toLocaleTimeString('vi-VN'), student: "Nguyễn Văn A", type: reason, desc: aiMessage, confidence: "96.8%" });
     if (violationsLog.length > 50) violationsLog.pop();
+    try { showIslandEvent('AI Phát hiện gian lận', aiMessage, { enhance:true, duration:4800 }); } catch(e){}
     localStorage.setItem('faceguard_violations', JSON.stringify(violationsLog));
     if (aiApiKey) addCloudChatMessage("Hệ thống", `🚨 Gian lận mới: ${reason}`, false);
     showToast("AI Cloud đã phân tích và ghi log vào DB!", false);
@@ -1379,8 +1666,9 @@ function handleLogin() {
     };
 }
 function simulateFaceLogin() {
-    showToast("✅ Face ID xác thực thành công!", false);
-    setTimeout(() => {
+    // play Face ID scan animation then reveal app
+    scanFaceId({ duration: 900, success: true, color: 'linear-gradient(135deg,#06b6d4,#7c3aed)' }).then(()=>{
+        showToast("✅ Face ID xác thực thành công!", false);
         document.getElementById('2fa-section').classList.add('hidden');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
@@ -1393,21 +1681,24 @@ function simulateFaceLogin() {
         renderSavedFaces();
         renderAttendance();
         showToast("Chào mừng đến FaceGuard AI Pro v3.3!", false);
-    }, 800);
+    });
 }
 function verifyOTP() {
     if (document.getElementById('otp-input').value.length === 6) {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        document.getElementById('user-info').classList.remove('hidden');
-        document.getElementById('user-name').textContent = currentUser.name;
-        document.getElementById('user-role').textContent = currentUser.role;
-        document.getElementById('ai-status').classList.remove('hidden');
-        renderMainMenu();
-        switchPage('page-dashboard');
-        renderSavedFaces();
-        renderAttendance();
-        showToast("Chào mừng đến FaceGuard AI Pro v3.3!", false);
+        // run Face ID scan effect for verification
+        scanFaceId({ duration: 900, success: true, color: 'linear-gradient(135deg,#ffd166,#f97316)' }).then(()=>{
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-role').textContent = currentUser.role;
+            document.getElementById('ai-status').classList.remove('hidden');
+            renderMainMenu();
+            switchPage('page-dashboard');
+            renderSavedFaces();
+            renderAttendance();
+            showToast("Chào mừng đến FaceGuard AI Pro v3.3!", false);
+        });
     }
 }
 function logout() { location.reload(); }
@@ -1493,6 +1784,10 @@ function showToast(text, isError = false) {
     toast.style.backgroundColor = isError ? '#dc2626' : '#10b981';
     toast.classList.remove('hidden');
     setTimeout(() => toast.classList.add('hidden'), 3400);
+    // island visual for successful toasts
+    if (!isError) {
+        try { showIslandEvent(text, '', { enhance: false, duration: 1800 }); } catch(e){}
+    }
 }
 
 // Responsive: auto-compact main menu on small screens for optimized layout
@@ -1575,10 +1870,29 @@ function addNotification(type, title, msg) {
             Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body: msg }); });
         }
     } catch (e) {}
+    try {
+        // visual island feedback for notifications (with icon and color)
+        const iconMap = { info: 'fas fa-info-circle', warning: 'fas fa-triangle-exclamation', error: 'fas fa-times-circle', success: 'fas fa-check-circle' };
+        const colorMap = { info: 'linear-gradient(90deg,#06b6d4,#7c3aed)', warning: 'linear-gradient(90deg,#f59e0b,#fb7185)', error: 'linear-gradient(90deg,#ef4444,#941b0c)', success: 'linear-gradient(90deg,#10b981,#06b6d4)' };
+        const opts = { enhance: type === 'error' || type === 'warning', duration: 2000, icon: iconMap[type] || iconMap.info, color: colorMap[type] || colorMap.info };
+        if (typeof showIslandEvent === 'function') showIslandEvent(title, msg, opts);
+        else if (typeof showDynamicIsland === 'function') showDynamicIsland(title, msg, type, 4200);
+    } catch(e){}
 }
 function dismissNotification(id) { notifications = notifications.filter(n => n.id !== id); localStorage.setItem('faceguard_notifs', JSON.stringify(notifications)); renderNotificationCenter(); }
 function clearAllNotifications() { if (confirm('Xóa toàn bộ thông báo?')) { notifications = []; localStorage.setItem('faceguard_notifs', '[]'); renderNotificationCenter(); } }
-function toggleNotificationsEnabled() { notificationsEnabled = !notificationsEnabled; localStorage.setItem('faceguard_notifs_enabled', notificationsEnabled ? '1' : '0'); showToast(notificationsEnabled ? '✅ Thông báo trình duyệt đã bật' : '🔕 Thông báo đã tắt', false); if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'granted') Notification.requestPermission(); }
+function toggleNotificationsEnabled() {
+    notificationsEnabled = !notificationsEnabled; 
+    localStorage.setItem('faceguard_notifs_enabled', notificationsEnabled ? '1' : '0'); 
+    showToast(notificationsEnabled ? '✅ Thông báo trình duyệt đã bật' : '🔕 Thông báo đã tắt', false);
+    try { 
+        // small FaceID-like pulse when toggling
+        scanFaceId({ duration: 700, success: true, color: notificationsEnabled ? 'linear-gradient(90deg,#06b6d4,#7c3aed)' : 'linear-gradient(90deg,#374151,#111827)' });
+    } catch(e){}
+    if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'granted') Notification.requestPermission(); 
+}
+// show dynamic island when toggling notifications
+    // (removed wrapped notification UI) use toggleNotificationsEnabled directly
 
 // Multi-camera simulation
 let multiCameraActive = false;
@@ -1627,8 +1941,11 @@ async function recordSession() {
         addNotification('info', 'Ghi hình hoàn tất', 'Phiên giám sát đã được lưu (demo)');
         showToast('✅ Phiên ghi hình đã lưu (demo)', false);
     };
+    // animate a small scan/pulse before starting recording
+    try { await scanFaceId({ duration: 600, success: true, color: 'linear-gradient(90deg,#f59e0b,#fb7185)' }); } catch(e){}
     recorder.start();
     showToast('⏺️ Đang ghi (12 giây demo)...', false);
+    try { showIslandEvent('Ghi hình bắt đầu', 'Đang ghi phiên giám sát...', { enhance:false, duration:3500 }); } catch(e){}
     setTimeout(() => recorder.stop(), 12000);
 }
 
@@ -1640,6 +1957,7 @@ function exportCsv() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'faceguard-violations.csv'; link.click();
     showToast('📥 CSV đã được tải xuống', false);
+    try { showIslandEvent('CSV đã xuất', 'Báo cáo vi phạm đã được tải xuống', { enhance:false, duration:3000 }); } catch(e){}
 }
 async function previewPdfReport() {
     const preview = document.getElementById('pdf-preview');
@@ -1648,6 +1966,7 @@ async function previewPdfReport() {
     const node = document.createElement('div');
     node.innerHTML = `<h2>Báo cáo vi phạm</h2><ul>${violationsLog.map(v=>`<li>${v.time} - ${v.student} - ${v.type} - ${v.confidence}</li>`).join('')}</ul>`;
     await html2canvas(node).then(canvas => { document.getElementById('pdf-preview').innerHTML = ''; document.getElementById('pdf-preview').appendChild(canvas); });
+    try { showIslandEvent('Preview PDF sẵn sàng', 'Bạn có thể xem hoặc xuất PDF', { enhance:false, duration:3200 }); } catch(e){}
 }
 async function aiSummarizeReport() {
     if (!aiApiKey) return showToast('Kết nối AI Cloud trước khi tóm tắt', true);
@@ -1655,12 +1974,82 @@ async function aiSummarizeReport() {
     const res = await callAICloud(prompt);
     document.getElementById('report-summary').innerText = res;
     addCloudChatMessage('Hệ thống', 'Tóm tắt báo cáo đã tạo bởi AI', false);
+    try { showIslandEvent('AI Tóm tắt', 'Báo cáo đã được tóm tắt bởi AI', { enhance:true, duration:3200 }); } catch(e){}
 }
 
 // AI Cloud chat history control
 function clearAIChatHistory() { if (confirm('Xóa lịch sử AI Cloud trong phiên?')) { sessionStorage.removeItem('faceguard_ai_chat'); window.aiChatHistory = []; document.getElementById('ai-cloud-chat').innerHTML = '<div class="text-center text-xs text-gray-400 py-4">👋 AI Cloud Assistant (Grok) sẵn sàng hỗ trợ bạn 24/7</div>'; showToast('🧠 Đã xóa lịch sử AI Cloud trong phiên', false); } }
 
 function showUsageGuide() { document.getElementById('usage-guide-modal').classList.remove('hidden'); }
+
+// Usage guide section renderer
+function showGuideSection(section){
+    const container = document.getElementById('usage-guide-content');
+    if(!container) return;
+    // clear active tab styles
+    ['main','coco','smoking','community'].forEach(s=>{ const b = document.getElementById('guide-tab-'+s); if(b) b.classList.remove('bg-emerald-700'); });
+    const tab = document.getElementById('guide-tab-'+section); if(tab) tab.classList.add('bg-emerald-700');
+
+    if(section === 'main'){
+        container.innerHTML = `
+            <p class="font-semibold">Tổng quan ngắn</p>
+            <p>FaceGuard giám sát camera, phát hiện vi phạm và lưu báo cáo. Sử dụng COCO-SSD cho object-detection và face-api cho nhận diện khuôn mặt.</p>
+            <p class="font-semibold mt-3">Các thao tác nhanh</p>
+            <ul class="list-disc ml-5 text-sm">
+                <li>Bật/Tắt giám sát: dùng nút Giám sát hoặc lệnh thoại.</li>
+                <li>Ghi hình phiên: Quick Actions → "Ghi hình phiên".</li>
+                <li>Trung tâm Thông báo: nhấn chuông để xem alert realtime.</li>
+            </ul>
+        `;
+        return;
+    }
+
+    if(section === 'coco'){
+        container.innerHTML = `
+            <p class="font-semibold">Tài liệu tóm tắt COCO-SSD</p>
+            <p>COCO-SSD là mô hình object detection phát hiện nhiều lớp (person, cell phone, cigarette, etc.). Trong FaceGuard, chúng tôi dùng COCO-SSD để phát hiện hành vi (ví dụ: hút thuốc, cầm điện thoại).</p>
+            <p class="font-semibold mt-3">Ví dụ mã (sử dụng CDN model):</p>
+            <pre class="text-xs bg-gray-800 p-3 rounded text-gray-200 overflow-x-auto">const model = await cocoSsd.load();
+const preds = await model.detect(videoElement);
+preds.forEach(p => { if(p.class === 'cell phone' &amp;&amp; p.score&gt;0.6) handlePhone(p); });</pre>
+            <p class="text-xs text-gray-400 mt-2">Lưu ý: threshold confidence tùy theo môi trường (ánh sáng, góc camera).</p>
+        `;
+        return;
+    }
+
+    if(section === 'smoking'){
+        container.innerHTML = `
+            <p class="font-semibold">Hướng dẫn sử dụng Anti-Smoking</p>
+            <p>Anti-Smoking kết hợp object detection (COCO-SSD) và logic time-window: nếu phát hiện đối tượng 'cigarette' hoặc 'hand' gần mặt trong nhiều khung liên tiếp → gắn nhãn vi phạm.</p>
+            <p class="font-semibold mt-3">Cách hiệu chỉnh</p>
+            <ul class="list-disc ml-5 text-sm">
+                <li>Tăng threshold confidence cho môi trường nhiều nhiễu (≥0.7).</li>
+                <li>Sử dụng ROI (vùng quan tâm) xung quanh khuôn mặt để giảm false-positive.</li>
+                <li>Áp dụng smoothing: yêu cầu phát hiện liên tiếp trong N khung (ví dụ 3-5) để chấp nhận vi phạm.</li>
+            </ul>
+            <p class="text-xs text-gray-400 mt-2">Gợi ý: đặt camera gần và hướng thẳng vào đối tượng để tăng độ chính xác.</p>
+        `;
+        return;
+    }
+
+    if(section === 'community'){
+        container.innerHTML = `
+            <p class="font-semibold">Cộng đồng & Hỗ trợ</p>
+            <p>Tham gia cộng đồng để chia sẻ cấu hình camera, threshold, và các mẫu dữ liệu:</p>
+            <ul class="list-disc ml-5 text-sm">
+                <li><strong>GitHub:</strong> https://github.com/your-org/faceguard (ví dụ dự án mã nguồn)</li>
+                <li><strong>Forum:</strong> https://community.faceguard.edu.vn</li>
+                <li><strong>Liên hệ:</strong> support@faceguard.edu.vn</li>
+            </ul>
+            <p class="text-xs text-gray-400 mt-2">Bạn có thể gửi mẫu ảnh (anonymized) để giúp mô hình tinh chỉnh tốt hơn.</p>
+        `;
+        return;
+    }
+}
+
+// initialize guide content when modal opens
+const originalShowUsageGuide = showUsageGuide;
+showUsageGuide = function(){ document.getElementById('usage-guide-modal').classList.remove('hidden'); showGuideSection('main'); };
 
 function exportPdfReport() {
     const doc = new jspdf.jsPDF();
@@ -1679,7 +2068,9 @@ function toggleTheme() {
     localStorage.setItem('faceguard_theme', isLight ? 'light' : 'dark');
     const icon = document.getElementById('theme-icon');
     if (icon) icon.className = isLight ? 'fas fa-moon text-xl' : 'fas fa-sun text-xl';
-    showToast(isLight ? '🌤 Chế độ Sáng' : '🌙 Chế độ Tối', false);
+    const msg = isLight ? '🌤 Chế độ Sáng' : '🌙 Chế độ Tối';
+    showToast(msg, false);
+    try { showIslandEvent(isLight ? 'Chế độ Sáng' : 'Chế độ Tối', isLight ? 'Giao diện sáng' : 'Giao diện tối', { enhance: true, duration: 1600, color: isLight ? 'linear-gradient(135deg,#ffd166,#f97316)' : 'linear-gradient(135deg,#06b6d4,#7c3aed)' }); } catch(e){}
 }
 function applyThemeOnLoad() {
     const t = localStorage.getItem('faceguard_theme') || 'dark';
@@ -1722,6 +2113,23 @@ function setCameraQaVisibility(visible) {
     if (!el) return;
     el.style.display = visible ? 'flex' : 'none';
 }
+
+// Dynamic Island removed — use notifications instead
+function showDynamicIsland(title, sub, type = 'info', duration = 3800) {
+    // Deprecated wrapper kept for compatibility — delegate to island visuals + notifications
+    try {
+        try { addNotification(type, title, sub); } catch (e) { try { showToast(title, false); } catch (e) {} }
+        if (typeof showIslandEvent === 'function') {
+            showIslandEvent(title, sub, { enhance: type === 'error' || type === 'warning', duration });
+        }
+        console.warn('showDynamicIsland is deprecated — use addNotification / showIslandEvent');
+    } catch (e) {}
+}
+function hideDynamicIsland() { /* no-op, dynamic island removed */ }
+
+// island action wiring removed (Dynamic Island disabled)
+
+// Dynamic Island is hooked into addNotification earlier in the file
 
 
 // Auto Roll-call
