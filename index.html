@@ -1,2331 +1,578 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <style>
-    body {
-        margin: 0;
-        background: #000;
-    }
-
-    /* Island (always visible) */
-    .island {
-        position: fixed;
-        top: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 140px;
-        height: 44px;
-        background: #000; /* default black */
-        border-radius: 999px;
-        transition: all 0.32s cubic-bezier(0.2, 0, 0.2, 1);
-        cursor: pointer;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 12px;
-        gap: 10px;
-        box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-    }
-
-    .island .island-inner { display:flex; align-items:center; gap:10px; width:100%; }
-    .island .meta { display:flex; flex-direction:column; min-width:0; opacity: 0; transform: translateX(6px); transition: opacity .28s ease, transform .28s ease }
-    .island .title { font-size:13px; font-weight:700; color:#e6eef8; line-height:1 }
-    .island .sub { font-size:11px; color:#b7c6d9; opacity:0.9 }
-
-    /* expanded state (manual click) */
-    .island.active { width: 340px; height: 86px; border-radius:20px; padding:12px 18px }
-    .island.active .thumb { width:56px; height:56px; border-radius:12px }
-    .island.active .title { font-size:15px }
-
-    /* reveal meta when active/enhanced/alert */
-    .island.active .meta, .island.enhanced .meta, .island.alert .meta { opacity:1; transform: translateX(0) }
-
-    /* enhanced effects when toggled on */
-    .island.enhanced { box-shadow: 0 28px 60px rgba(99,102,241,0.18), 0 8px 40px rgba(6,182,212,0.06); border: 1px solid rgba(124,58,237,0.12); transform: translateX(-50%) translateY(-2px) scale(1.02); }
-    .island.enhanced .thumb { filter: drop-shadow(0 8px 24px rgba(124,58,237,0.22)); }
-
-    /* alert pulse used by events */
-    .island.alert { animation: island-alert 1.9s cubic-bezier(.2,.9,.3,1); }
-    @keyframes island-alert { 0%{ transform:translateX(-50%) scale(.98) } 30%{ transform:translateX(-50%) scale(1.06) } 60%{ transform:translateX(-50%) scale(1.02) } 100%{ transform:translateX(-50%) scale(1) } }
-
-    /* pop/slide animation for new events */
-    .island.pop { animation: island-pop 0.6s cubic-bezier(.2,.9,.3,1); }
-    @keyframes island-pop { 0% { transform: translateX(-50%) translateY(-8px) scale(.96); opacity:0 } 60% { transform: translateX(-50%) translateY(2px) scale(1.04); opacity:1 } 100% { transform: translateX(-50%) translateY(0) scale(1); opacity:1 } }
-
-    /* idle breathing when enhanced */
-    @keyframes island-breathe { 0%{ transform:translateX(-50%) translateY(0) scale(1) } 50%{ transform:translateX(-50%) translateY(-2px) scale(1.01) } 100%{ transform:translateX(-50%) translateY(0) scale(1) } }
-    .island.enhanced:not(.active) { animation: island-breathe 6s ease-in-out infinite }
-
-    /* small toggle button inside island */
-    .island-toggle-btn { position:absolute; right:8px; top:8px; width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.03); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; border:1px solid rgba(255,255,255,0.04); cursor:pointer }
-
-    /* Face ID style scan inside thumb */
-    .island .thumb { position:relative; overflow:hidden; }
-    .island .thumb.scanning { box-shadow: 0 10px 40px rgba(124,58,237,0.18); transform: scale(1.02); }
-    .scan-ring { position:absolute; left:-8px; top:-8px; width:calc(100% + 16px); height:calc(100% + 16px); border-radius:12px; border:2px solid rgba(255,255,255,0.04); box-shadow: 0 0 20px rgba(124,58,237,0.06); pointer-events:none; animation: ring-fade 1.2s ease-in-out infinite; mix-blend-mode:screen }
-    .scan-beam { position:absolute; left:-120%; top:0; width:240%; height:100%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0) 100%); transform: translateX(-120%); pointer-events:none; animation: beam-swipe 1.1s linear forwards }
-    @keyframes beam-swipe { 0% { transform: translateX(-120%); } 40% { transform: translateX(-10%); } 100% { transform: translateX(120%); opacity:0 } }
-    @keyframes ring-fade { 0% { opacity: 0.08; transform: scale(.96) } 50% { opacity: 0.22; transform: scale(1.04) } 100% { opacity: 0.08; transform: scale(.96) } }
-
-    /* small success tick overlay */
-    .scan-success { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; font-size:18px; color:#0f5132; background: radial-gradient(closest-side, rgba(34,197,94,0.14), rgba(34,197,94,0.04)); border-radius:12px; }
-
-    .island-toggle-btn.active { background:linear-gradient(90deg,#7c3aed,#a78bfa); box-shadow:0 10px 30px rgba(124,58,237,0.18) }
-
-    /* hover subtle scale */
-    .island:hover { transform: translateX(-50%) scale(1.02); }
-
-    /* premium island visuals */
-    .island::before { content: ''; position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; background: linear-gradient(90deg, rgba(124,58,237,0.06), rgba(6,182,212,0.04)); mix-blend-mode: screen; opacity: 0; transition: opacity .35s ease; }
-    .island.enhanced::before { opacity: 1; }
-    .island .icon { width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background: rgba(255,255,255,0.03); color:#fff; font-size:12px; margin-right:6px }
-    .island .thumb img { width:100%; height:100%; object-fit:cover; border-radius:8px }
-
-    /* progress bar shown during timed events */
-    .island .progress { position:absolute; left:8px; right:8px; bottom:-6px; height:6px; background: rgba(255,255,255,0.03); border-radius:999px; overflow:hidden; opacity:0; transform: translateY(4px); transition: opacity .25s ease, transform .25s ease }
-    .island.show-progress .progress { opacity:1; transform: translateY(0) }
-    .island .progress .bar { height:100%; width:0%; background: linear-gradient(90deg,#06b6d4,#7c3aed); transition: width linear }
-
-    /* reveal meta when show-meta is set */
-    .island.show-meta .meta { opacity:1; transform: translateX(0) }
-    </style>
-    </head>
-
-    <body>
-
-    <div class="island" id="island" role="status" aria-live="polite" aria-label="Trạng thái hệ thống" aria-hidden="false">
-        <div class="island-inner">
-            <div id="island-icon" class="icon" style="display:none"></div>
-            <div class="thumb" id="island-thumb">
-                <div class="scan-ring hidden" id="island-scan-ring"></div>
-                <div class="scan-beam hidden" id="island-scan-beam"></div>
-                <div class="scan-success hidden" id="island-scan-success"><i class="fas fa-check-circle"></i></div>
-            </div>
-            <div class="meta">
-                <div class="title" id="island-title"></div>
-                <div class="sub" id="island-sub"></div>
-            </div>
-        </div>
-        <div class="progress" id="island-progress" aria-hidden="true"><div class="bar" id="island-progress-bar"></div></div>
-        <button id="island-toggle-effects" class="island-toggle-btn" title="Bật/Tắt hiệu ứng" onclick="toggleIslandEffects()">☆</button>
-    </div>
-
-    <script>
-    const island = document.getElementById('island');
-    const islandTitle = document.getElementById('island-title');
-    const islandSub = document.getElementById('island-sub');
-    const islandToggleBtn = document.getElementById('island-toggle-effects');
-
-    // click để bung ra / thu lại
-    island.addEventListener('click', (e) => {
-        // if clicked the small toggle button, ignore expanding
-        if (e.target === islandToggleBtn) return;
-        island.classList.toggle('active');
-    });
-
-    // effects control
-    function setIslandEffects(enabled){
-        if(enabled) island.classList.add('enhanced'); else island.classList.remove('enhanced');
-        try{ localStorage.setItem('island_effects_enabled', enabled ? '1':'0'); }catch(e){}
-        updateIslandToggle();
-    }
-
-    function toggleIslandEffects(){ setIslandEffects(!island.classList.contains('enhanced')); }
-
-    function updateIslandToggle(){
-        if(island.classList.contains('enhanced')){
-            islandToggleBtn.textContent = '✨';
-            islandToggleBtn.classList.add('active');
-        } else {
-            islandToggleBtn.textContent = '☆';
-            islandToggleBtn.classList.remove('active');
-        }
-    }
-
-    // temporary alert pulse for events
-    function pulseIsland(){
-        island.classList.add('alert');
-        setTimeout(()=> island.classList.remove('alert'), 2000);
-    }
-
-    // update island content (title/sub and optional color)
-    function updateIslandContent(title, sub, color) {
-        if (title !== undefined) islandTitle.textContent = title;
-        if (sub !== undefined) islandSub.textContent = sub;
-        const thumb = document.getElementById('island-thumb');
-        if (thumb && color) thumb.style.background = color;
-    }
-
-    // show an island event: richer visuals with icon/thumbnail/progress (reusing elements)
-    function showIslandEvent(title, sub, opts = {}){
-        try{
-            const prevEnhanced = island.classList.contains('enhanced');
-            updateIslandContent(title || islandTitle.textContent, sub || islandSub.textContent, opts.color || undefined);
-            if(!island.classList.contains('active')) island.classList.add('show-meta');
-
-            const thumb = document.getElementById('island-thumb');
-            const islandIcon = document.getElementById('island-icon');
-            const progWrap = document.getElementById('island-progress');
-            const progBar = document.getElementById('island-progress-bar');
-
-            // thumbnail handling
-            if(thumb){
-                // clear img if present
-                const existingImg = thumb.querySelector('img'); if(existingImg) existingImg.remove();
-                if(opts.thumb){
-                    const img = document.createElement('img'); img.src = opts.thumb; img.alt = opts.title || 'thumb'; thumb.appendChild(img);
-                } else {
-                    // set decorative background color
-                    thumb.style.background = opts.color || 'linear-gradient(90deg,#06b6d4,#7c3aed)';
-                }
-            }
-
-            // icon handling (reuse)
-            if(islandIcon){
-                if(opts.icon){ islandIcon.style.display = ''; islandIcon.innerHTML = `<i class="${opts.icon}"></i>`; }
-                else { islandIcon.style.display = 'none'; islandIcon.innerHTML = ''; }
-            }
-
-            if(opts.enhance) island.classList.add('enhanced');
-
-            // pop + pulse
-            island.classList.add('pop'); pulseIsland();
-            setTimeout(()=> island.classList.remove('pop'), 700);
-
-            // progress reuse
-            if(progWrap && progBar){
-                if(opts.duration && opts.duration > 200){
-                    progBar.style.transition = 'none'; progBar.style.width = '0%';
-                    requestAnimationFrame(()=>{
-                        island.classList.add('show-progress');
-                        progBar.style.transition = `width ${opts.duration}ms linear`;
-                        progBar.style.width = '100%';
-                    });
-                    setTimeout(()=>{ island.classList.remove('show-progress'); progBar.style.width = '0%'; }, opts.duration + 240);
-                }
-            }
-
-            // cleanup after duration
-            if (opts.duration) setTimeout(()=>{
-                if(!island.classList.contains('active')) island.classList.remove('show-meta');
-                if (!prevEnhanced && !opts.keepEnhanced) island.classList.remove('enhanced');
-                if(opts.icon && islandIcon) { islandIcon.style.display = 'none'; islandIcon.innerHTML = ''; }
-            }, (opts.duration || 1800) + 300);
-
-        }catch(e){ console.error(e); }
-    }
-
-    // Expose simple API for other parts of app
-    window.setIslandEffects = setIslandEffects;
-    window.toggleIslandEffects = toggleIslandEffects;
-    window.pulseIsland = pulseIsland;
-
-    // Face ID style scan animation — reuses island elements to avoid DOM churn
-    function scanFaceId({duration = 1100, success = true, color} = {}){
-        return new Promise(resolve => {
-            const thumb = document.getElementById('island-thumb');
-            const ring = document.getElementById('island-scan-ring');
-            const beam = document.getElementById('island-scan-beam');
-            const okEl = document.getElementById('island-scan-success');
-            if (!thumb) return resolve();
-            thumb.classList.add('scanning');
-            if(color) thumb.style.background = color;
-            island.classList.add('enhanced');
-            // show ring + beam
-            if(ring) ring.classList.remove('hidden');
-            if(beam) { beam.classList.remove('hidden'); beam.style.animation = 'none'; void beam.offsetWidth; beam.style.animation = null; }
-            if(okEl) okEl.classList.add('hidden');
-            // after duration show success/fail
-            setTimeout(()=>{
-                if(success){
-                    if(okEl) okEl.classList.remove('hidden');
-                    try{ updateIslandContent('Face ID xác thực','Chào mừng', color); }catch(e){}
-                } else {
-                    try{ updateIslandContent('Xác thực thất bại','Vui lòng thử lại', '#222'); }catch(e){}
-                }
-                pulseIsland();
-                // cleanup
-                setTimeout(()=>{
-                    if(ring) ring.classList.add('hidden');
-                    if(beam) beam.classList.add('hidden');
-                    if(okEl) okEl.classList.add('hidden');
-                    thumb.classList.remove('scanning');
-                    try{ if(localStorage.getItem('island_effects_enabled') !== '1') { thumb.style.background = ''; island.classList.remove('enhanced'); } }catch(e){}
-                    resolve(success);
-                }, 700);
-            }, duration);
-        });
-    }
-    window.scanFaceId = scanFaceId;
-
-    // Initialize from preference
-    (function(){
-        try{
-            const v = localStorage.getItem('island_effects_enabled');
-            setIslandEffects(v === '1');
-        }catch(e){ setIslandEffects(false); }
-        // rely on CSS animations for breathing to avoid JS intervals (reduces jank)
-    })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceGuard AI Pro v3.3 - Nâng Cấp 2026 (Full + Giám sát Hệ thống)</title>
+    <title>FaceGuard AI Pro - Giám sát AI thông minh 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-api@0.0.7/dist/face-api.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
-       
-        .camera-container {
-            position: relative;
-            background: #111;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5),
-                        inset 0 0 80px rgba(16, 185, 129, 0.15);
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+        
+        body {
+            background: linear-gradient(135deg, #020617, #0f172a, #020617);
+            font-family: 'Inter', system_ui, sans-serif;
         }
-       
-        .video-overlay {
+        .title-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .hero-bg {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.15));
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px -10px rgb(16 185 129 / 0.4);
+        }
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background: linear-gradient(to right, #10b981, #22d3ee, #3b82f6);
+            transition: width 0.4s ease;
+        }
+        .nav-link:hover:after {
+            width: 100%;
+        }
+        .neon-text {
+            text-shadow: 0 0 20px rgb(16 185 129), 0 0 40px rgb(34 211 238);
+        }
+        .scan-line {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
+            height: 3px;
+            background: linear-gradient(transparent, rgba(16, 185, 129, 0.8), transparent);
+            animation: scan 4s linear infinite;
+            opacity: 0.6;
         }
-       
-        .status-dot {
-            animation: pulse 1.5s infinite;
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(800%); }
         }
-       
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-       
-        .ai-badge {
-            animation: ai-glow 2s ease-in-out infinite;
-        }
-       
-        @keyframes ai-glow {
-            0%, 100% { text-shadow: 0 0 20px rgb(16 185 129); }
-            50% { text-shadow: 0 0 40px rgb(16 185 129), 0 0 60px rgb(134 239 172); }
-        }
-       
-        .smoking-badge {
-            animation: smokePulse 2s infinite;
-        }
-       
-        @keyframes smokePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-       
-        .log-entry {
-            animation: logPop 0.3s ease-out;
-        }
-       
-        @keyframes logPop {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-       
-        .glass {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(12px);
-        }
-    </style>
-    <style>
-        /* small pulse & glow when alerting */
-        #dynamic-island.alert { transform: translateX(-50%) translateY(0) scale(1); box-shadow:0 26px 60px rgba(99,102,241,0.22), 0 12px 30px rgba(16,185,129,0.08); border-color: rgba(99,102,241,0.25); }
-        #dynamic-island.alert .island-inner { animation: island-pop .42s cubic-bezier(.2,.9,.3,1); }
-        @keyframes island-pop { 0%{ transform: translateY(-8px) scale(.98) } 60%{ transform: translateY(0) scale(1.02) } 100%{ transform: translateY(0) scale(1) } }
-        /* compact responsive */
-        @media (max-width:880px){ #dynamic-island .island-inner{ min-width:180px; gap:8px; padding:8px 10px } .island-title{font-size:12px} .island-sub{display:none} }
-        /* Light mode overrides for common dark utility classes (simple but effective) */
-        body.light { background: #f8fafc !important; color: #0f172a !important; }
-        body.light .bg-gray-900 { background-color: #ffffff !important; }
-        body.light .bg-gray-800 { background-color: #f3f4f6 !important; }
-        body.light .bg-gray-700 { background-color: #e5e7eb !important; }
-        body.light .bg-gray-950 { background-color: #ffffff !important; }
-        body.light .text-gray-100 { color: #0f172a !important; }
-        body.light .text-gray-400 { color: #374151 !important; }
-        body.light .border-gray-800 { border-color: #e5e7eb !important; }
-        body.light .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(6px); }
-        /* Compact menu styles */
-        #main-menu { display: flex; gap: 8px; align-items: center; }
-        #main-menu .menu-item { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 16px; }
-        #main-menu .menu-item .label { margin-left: 6px; font-size: 13px; display: inline-block; }
-        #main-menu.compact .menu-item .label { display: none; }
-        #main-menu.compact .menu-item { padding: 8px; border-radius: 9999px; }
-
-        /* VIP loader styles */
-        .vip-orb { width: 84px; height: 84px; border-radius: 9999px; margin: 0 auto; position: relative; box-shadow: 0 6px 30px rgba(99,102,241,0.25), inset 0 0 40px rgba(34,197,94,0.12); background: conic-gradient(from 90deg at 50% 50%, #06b6d4, #a78bfa, #fb7185, #f59e0b); animation: orb-rotate 3.5s linear infinite; }
-        .vip-orb::after { content: ''; position: absolute; inset: 6px; border-radius: 9999px; background: radial-gradient(closest-side, rgba(255,255,255,0.18), rgba(255,255,255,0.02)); }
-        @keyframes orb-rotate { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.06); } 100% { transform: rotate(360deg) scale(1); } }
-        #global-loader.show { display:flex; }
-        /* shimmer for loader bar */
-        #loader-bar { background-size: 200% 100%; animation: loader-shimmer 5.0s linear infinite; }
-        @keyframes loader-shimmer { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
-        /* small entrance animation */
-        .loader-pop { animation: loader-pop 0.5s cubic-bezier(.2,.9,.3,1); }
-        @keyframes loader-pop { from { transform: translateY(6px) scale(.98); opacity: 0 } to { transform: translateY(0) scale(1); opacity:1 } }
-        /* Compact Quick Actions toolbar */
-        .qa-toolbar { display:flex; gap:8px; align-items:center; }
-        .qa-btn { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; transition:transform .14s ease, box-shadow .14s ease, width .18s ease; cursor:pointer; position:relative; }
-        .qa-btn i { font-size:16px; }
-        .qa-btn.gray { background:rgba(255,255,255,0.03); color:#e6eef8; border:1px solid rgba(255,255,255,0.04); }
-        .qa-btn.emerald { background:linear-gradient(90deg,#10b981,#06b6d4); color:#fff; }
-        .qa-btn.amber { background:linear-gradient(90deg,#f59e0b,#fb923c); color:#fff; }
-        .qa-btn.violet { background:linear-gradient(90deg,#7c3aed,#a78bfa); color:#fff; }
-        .qa-btn:hover { transform:translateY(-6px); box-shadow:0 18px 40px rgba(2,6,23,0.45); }
-        .qa-label { display:none; margin-left:8px; font-weight:600; font-size:13px; white-space:nowrap; }
-        .qa-toolbar.expanded .qa-btn { width:auto; padding:8px 12px; border-radius:14px; }
-        .qa-toolbar.expanded .qa-label { display:inline-block; }
-        .qa-expand { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
-        .qa-expand i { font-size:12px; }
-        @media (max-width:880px){ .qa-toolbar{justify-content:center} .qa-btn{width:40px;height:40px} }
-        /* Glass icon pills for navbar status */
-        .glass-icon { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,0.03); backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,0.04); color:inherit; }
-        .glass-icon i { font-size:16px; }
-        .glass-icon:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(2,6,23,0.45); }
-        .navbar-status { display:flex; gap:8px; align-items:center; }
-        /* Camera overlay QA toolbar (always visible on dashboard) */
-        .camera-qa-overlay { position:absolute; right:18px; bottom:18px; display:flex; gap:8px; align-items:center; z-index:60; }
-        .camera-qa-overlay .qa-btn { pointer-events:auto; width:44px; height:44px; border-radius:12px; box-shadow:0 10px 30px rgba(2,6,23,0.45); }
-        .camera-qa-overlay .qa-label { display:none !important; }
-        @media (max-width:880px){ .camera-qa-overlay{right:12px;bottom:12px} }
-        /* collapsed / compact camera QA */
-        .camera-qa-overlay.collapsed { gap:6px; right:14px; bottom:14px; }
-        .camera-qa-overlay.collapsed .qa-btn { width:40px; height:40px; border-radius:9999px; padding:0; }
-        .camera-qa-overlay.collapsed .qa-btn:not(.fab-toggle) { opacity:0.95; }
-        .camera-qa-overlay .fab-toggle { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:9999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
-        .camera-qa-overlay.collapsed .qa-label { display:none !important; }
-        .camera-qa-overlay { transition: all .18s ease; }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100">
-
-<!-- GLOBAL VIP LOADER -->
-<div id="global-loader" class="fixed inset-0 z-[20000] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
-    <div class="w-96 p-6 rounded-3xl bg-gradient-to-br from-emerald-900/80 to-teal-900/80 border border-emerald-500/30 shadow-2xl text-center loader-pop">
-        <div class="relative mb-4">
-            <div class="vip-orb mx-auto mb-3"></div>
-            <h3 id="loader-title" class="text-2xl font-bold text-emerald-300">FaceGuard AI Pro</h3>
-            <p id="loader-sub" class="text-sm text-gray-300 mt-2">Khởi tạo mô hình, tải mô-đun AI...</p>
-        </div>
-        <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-            <div id="loader-bar" class="h-full bg-gradient-to-r from-amber-400 via-rose-500 to-violet-400" style="width:6%"></div>
-        </div>
-        <div class="mt-4 flex items-center justify-center gap-3">
-            <button onclick="hideLoader(true)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-2xl text-sm">Bỏ qua</button>
-        </div>
-    </div>
-</div>
+<body class="text-white overflow-x-hidden">
 
 <!-- NAVBAR -->
-<nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 shadow-xl">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+<nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <i class="fas fa-shield-alt text-3xl text-emerald-500"></i>
-            <!-- Quick access: Notification bell and Help -->
-            <div class="relative">
-                <button id="notif-bell" onclick="toggleNotificationCenter()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Thông báo">
-                    <i class="fas fa-bell text-xl"></i>
-                    <span id="notif-count" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span>
-                </button>
-            </div>
-            <button onclick="showUsageGuide()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Hướng dẫn">
-                <i class="fas fa-question-circle text-xl"></i>
-            </button>
-            <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-800 transition-all" title="Chuyển chế độ Sáng/Tối">
-                <i id="theme-icon" class="fas fa-sun text-xl"></i>
-            </button>
-            <!-- Compact glass status group -->
-            <div class="ml-3 navbar-status">
-                <div class="glass-icon" title="AI Pro v3.3"><i class="fas fa-robot text-emerald-300"></i><span class="text-sm font-semibold">AI Pro v3.3</span></div>
-                <div class="glass-icon" title="Anti-Smoking"><i class="fas fa-smoking text-orange-400"></i></div>
-                <div id="cloud-indicator" class="glass-icon cursor-pointer" onclick="openAICloudModal()" title="AI Cloud (mở chat)"><i class="fas fa-cloud-upload-alt text-violet-400"></i><span id="cloud-dot-mini" class="status-dot hidden"></span></div>
-                <div class="glass-icon cursor-pointer" onclick="switchPage('page-system-monitor')" title="Giám sát hệ thống"><i class="fas fa-server text-yellow-400"></i></div>
-                <div class="glass-icon text-xs" title="Phiên bản">2026</div>
-                <div id="openai-badge-mini" class="glass-icon cursor-pointer hidden" title="OpenAI Live"><i class="fas fa-check-circle text-emerald-400"></i><span class="text-xs">OPENAI</span></div>
-            </div>
+            <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 via-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg shadow-emerald-500/50">FG</div>
+            <span class="title-font text-3xl font-bold tracking-tighter">FaceGuard <span class="text-emerald-400">AI Pro</span></span>
         </div>
-       
-            <div class="flex items-center gap-6">
-            <div onclick="openAICloudModal()" id="ai-cloud-status"
-                 class="flex items-center gap-2 bg-violet-900/30 hover:bg-violet-900/50 text-violet-400 text-xs px-4 py-2 rounded-3xl cursor-pointer transition-all hover:scale-105">
-                <i class="fas fa-key"></i>
-                <span id="cloud-status-text">Chưa kết nối AI Cloud</span>
-            </div>
-            <div id="ai-status" class="hidden flex items-center gap-2 bg-emerald-900/30 text-emerald-400 text-xs px-4 py-2 rounded-3xl">
-                <div class="flex items-center gap-1">
-                    <div class="live-dot"></div>
-                    <span id="ai-models-text">face-api + COCO-SSD REAL + Anti-Smoking</span>
-                </div>
-                
+        <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg bg-white/6">
+            <i class="fas fa-bars"></i>
+        </button>
 
-                <!-- Quick Actions compact toolbar -->
-                <div class="mt-4 qa-toolbar" id="qa-toolbar">
-                    <button onclick="toggleMultiCamera()" id="btn-multi-camera" class="qa-btn gray" title="Chế độ Nhiều Camera (4)">
-                        <i class="fas fa-th-large"></i>
-                        <span class="qa-label">Chế độ nhiều camera</span>
-                    </button>
-                    <button onclick="recordSession()" id="btn-record-session" class="qa-btn emerald" title="Ghi hình phiên (12s)">
-                        <i class="fas fa-circle" style="color:rgba(255,255,255,0.95)"></i>
-                        <span class="qa-label">Ghi hình phiên</span>
-                    </button>
-                    <button onclick="simulateAIDetection()" id="btn-simulate" class="qa-btn amber" title="Mô phỏng vi phạm">
-                        <i class="fas fa-bolt"></i>
-                        <span class="qa-label">Mô phỏng vi phạm</span>
-                    </button>
-                    <button onclick="toggleNotificationsEnabled()" id="btn-toggle-notifs" class="qa-btn violet" title="Bật/Tắt thông báo trình duyệt">
-                        <i class="fas fa-bell"></i>
-                        <span class="qa-label">Thông báo</span>
-                    </button>
-                    <button onclick="exportCsv()" id="btn-export-csv" class="qa-btn gray" title="Xuất CSV vi phạm">
-                        <i class="fas fa-file-csv"></i>
-                        <span class="qa-label">Xuất CSV</span>
-                    </button>
-                    <button onclick="previewPdfReport()" id="btn-preview-pdf" class="qa-btn gray" title="Preview PDF báo cáo">
-                        <i class="fas fa-file-pdf"></i>
-                        <span class="qa-label">Preview PDF</span>
-                    </button>
-                    <button onclick="toggleQaExpand()" id="btn-qa-expand" class="qa-expand" title="Mở rộng">
-                        <i id="qa-expand-icon" class="fas fa-chevron-left"></i>
-                    </button>
-                </div>
-
-            </div>
-            <div class="relative">
-                <button id="user-compact" onclick="toggleUserMenu()" class="glass-icon flex items-center gap-2">
-                    <i class="fas fa-user-circle text-emerald-300 text-2xl"></i>
-                    <div class="hidden md:block text-sm text-left">
-                        <div id="user-name-mini" class="font-semibold">Quản trị viên</div>
-                        <div id="user-role-mini" class="text-xs text-gray-400">Admin</div>
-                    </div>
-                </button>
-                <div id="user-popover" class="hidden absolute right-0 mt-2 w-44 bg-gray-900 border border-gray-800 rounded-xl p-3 shadow-xl">
-                    <div class="text-sm text-gray-300 mb-3">Quản trị viên</div>
-                    <button onclick="logout()" class="w-full py-2 bg-red-600 hover:bg-red-700 rounded-xl text-white">Đăng xuất</button>
-                </div>
-            </div>
-           
-            <div class="flex items-center gap-1.5 bg-gray-800 rounded-3xl px-2 py-1">
-                <button onclick="toggleDarkMode()" class="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-gray-700 transition">
-                    <i id="theme-icon" class="fas fa-moon text-emerald-400"></i>
-                </button>
-                <button onclick="openAISettings()" class="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-gray-700 transition">
-                    <i class="fas fa-sliders-h text-emerald-400"></i>
-                </button>
-                <button onclick="exportReport()" class="w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-gray-700 transition text-amber-400">
-                    <i class="fas fa-file-export"></i>
-                </button>
-            </div>
+        <div class="hidden md:flex items-center gap-10 text-sm font-medium">
+            <a href="#features" class="nav-link hover:text-emerald-400 transition">Tính năng</a>
+            <a href="#dashboard" class="nav-link hover:text-emerald-400 transition">Dashboard</a>
+            <a href="#preview" class="nav-link hover:text-emerald-400 transition">Demo</a>
+            <a href="#benefits" class="nav-link hover:text-emerald-400 transition">Lợi ích</a>
+            <a href="#pricing" class="nav-link hover:text-emerald-400 transition">Giá</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="#download" class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/30 rounded-2xl font-semibold transition text-sm backdrop-blur-md">
+                Đăng nhập
+            </a>
+            <a href="#download" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-2xl font-semibold transition shadow-lg shadow-emerald-500/40">
+                Tải ngay
+            </a>
         </div>
     </div>
-    <!-- MENU -->
-    <div class="max-w-7xl mx-auto px-6 border-t border-gray-800 bg-gray-900">
-        <div class="flex items-center gap-3 text-sm font-medium py-3" id="main-menu">
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-dashboard')">
-                <i class="fas fa-home text-amber-400"></i>
-                <span class="label">Trang chủ</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-register-face')">
-                <i class="fas fa-id-card text-emerald-300"></i>
-                <span class="label">Train Khuôn mặt AI</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-monitor')">
-                <i class="fas fa-video text-red-400"></i>
-                <span class="label">Giám sát AI</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-attendance')">
-                <i class="fas fa-list-check text-blue-400"></i>
-                <span class="label">Điểm danh AI</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-advanced-analytics')">
-                <i class="fas fa-chart-line text-violet-400"></i>
-                <span class="label">Phân tích AI</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-violations-db')">
-                <i class="fas fa-database text-orange-400"></i>
-                <span class="label">Cơ sở dữ liệu vi phạm</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-reports')">
-                <i class="fas fa-file-chart-column text-emerald-300"></i>
-                <span class="label">Báo cáo</span>
-            </button>
-            <button class="menu-item px-3 py-2 hover:bg-gray-800 rounded-2xl flex items-center gap-3" onclick="switchPage('page-system-monitor')">
-                <i class="fas fa-server text-gray-300"></i>
-                <span class="label">Giám sát Hệ thống</span>
-            </button>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden hidden bg-black/70 backdrop-blur-sm border-t border-white/5">
+        <div class="px-6 py-4 flex flex-col gap-3 text-sm">
+            <a href="#features" class="py-2">Tính năng</a>
+            <a href="#dashboard" class="py-2">Dashboard</a>
+            <a href="#preview" class="py-2">Demo</a>
+            <a href="#benefits" class="py-2">Lợi ích</a>
+            <a href="#pricing" class="py-2">Giá</a>
         </div>
     </div>
 </nav>
 
- 
-
-<div class="max-w-7xl mx-auto px-6 py-8">
-
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="max-w-md mx-auto">
-        <div class="bg-gray-900 rounded-3xl p-8 shadow-2xl border border-emerald-500/30">
-            <div class="flex justify-center mb-4">
-                <i class="fas fa-shield-alt text-6xl text-emerald-500"></i>
-            </div>
-            <h2 class="text-4xl font-bold text-center mb-2">FaceGuard AI Pro v3.3</h2>
-            <p class="text-center text-emerald-400 text-sm mb-8">Giám sát thi cử • Anti-Smoking • Mô hình AI thật • Cơ sở dữ liệu • Giám sát hệ thống lỗi realtime</p>
-           
-            <div class="space-y-6">
-                <div>
-                    <label class="text-sm text-gray-400 block mb-2">Tên đăng nhập / Email</label>
-                    <input id="login-username" type="text" value="admin@faceguard.edu.vn"
-                           class="w-full bg-gray-800 border border-gray-700 rounded-3xl px-5 py-4 focus:outline-none focus:border-emerald-500 text-lg">
-                </div>
-                <div>
-                    <label class="text-sm text-gray-400 block mb-2">Mật khẩu</label>
-                    <input id="login-password" type="password" value="123456"
-                           class="w-full bg-gray-800 border border-gray-700 rounded-3xl px-5 py-4 focus:outline-none focus:border-emerald-500 text-lg">
-                </div>
-               
-                <div id="2fa-section" class="hidden">
-                    <div class="bg-emerald-900/30 border border-emerald-500/50 rounded-3xl p-5 glass">
-                        <p class="text-emerald-400 text-sm mb-3 flex items-center gap-2"><i class="fas fa-brain"></i> XÁC THỰC 2 LỚP AI + BIOMETRIC</p>
-                        <label class="text-sm text-gray-400 block mb-2">Nhập mã OTP hoặc quét khuôn mặt</label>
-                        <div class="flex gap-3">
-                            <input id="otp-input" type="text" maxlength="6" placeholder="482917"
-                                   class="flex-1 bg-gray-800 border border-gray-700 rounded-3xl px-5 py-4 text-center text-2xl tracking-widest focus:outline-none focus:border-emerald-500">
-                            <button onclick="verifyOTP()"
-                                    class="px-8 bg-emerald-600 hover:bg-emerald-700 rounded-3xl font-medium flex items-center gap-2">
-                                <i class="fas fa-fingerprint"></i> Xác nhận
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-3 flex items-center justify-between">
-                            <span>Mã demo: <span id="fake-otp" class="font-mono text-emerald-400">482917</span></span>
-                            <span onclick="simulateFaceLogin()" class="text-emerald-400 cursor-pointer hover:underline">→ Hoặc dùng Face ID</span>
-                        </p>
-                    </div>
-                </div>
-               
-                <button onclick="handleLogin()"
-                        class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-600 rounded-3xl font-semibold text-lg flex items-center justify-center gap-3 transition-all active:scale-95">
-                    <i class="fas fa-right-to-bracket"></i>
-                    ĐĂNG NHẬP VÀO HỆ THỐNG AI PRO
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN APP -->
-    <div id="main-app" class="hidden">
-
-        <!-- DASHBOARD -->
-        <div id="page-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-7 bg-gray-900 rounded-3xl p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-semibold flex items-center gap-3"><i class="fas fa-video"></i> Camera AI Trực Tiếp <span class="text-red-400 text-sm font-medium ml-3">(COCO-SSD + Anti-Smoking)</span></h2>
-                    <div class="flex items-center gap-2 text-emerald-400 text-sm font-medium">
-                        <i class="fas fa-brain"></i>
-                        <span id="ai-confidence" class="font-mono">AI Confidence: <span class="text-white">99.7%</span></span>
-                    </div>
-                </div>
-               
-                <div class="camera-container aspect-video w-full" id="camera-dashboard">
-                    <video id="video-dashboard" autoplay playsinline class="w-full h-full object-cover"></video>
-                    <canvas id="ai-overlay-dashboard" class="video-overlay"></canvas>
-                    <div class="video-overlay flex items-center justify-center pointer-events-none">
-                        <div id="camera-status" class="text-white text-center">
-                            <div class="flex items-center justify-center gap-2 mb-4">
-                                <span id="status-dot" class="w-4 h-4 bg-emerald-400 rounded-full status-dot"></span>
-                                <span id="camera-text" class="font-semibold text-xl">AI ĐANG PHÂN TÍCH THỜI GIAN THỰC...</span>
-                            </div>
-                            <button onclick="toggleMonitoring()" id="btn-monitor"
-                                    class="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-3xl flex items-center gap-3 mx-auto shadow-xl transition-all active:scale-95">
-                                <i class="fas fa-toggle-on"></i>
-                                <span id="monitor-text">BẬT GIÁM SÁT AI THẬT</span>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Floating Quick Actions attached to camera -->
-                    <div class="camera-qa-overlay" id="camera-qa-overlay">
-                        <button onclick="toggleMultiCamera()" id="fab-multi-camera" class="qa-btn gray" title="Multi-Cam"><i class="fas fa-th-large"></i></button>
-                        <button onclick="recordSession()" id="fab-record" class="qa-btn emerald" title="Ghi hình"><i class="fas fa-circle" style="color:rgba(255,255,255,0.95)"></i></button>
-                        <button onclick="simulateAIDetection()" id="fab-simulate" class="qa-btn amber" title="Mô phỏng"><i class="fas fa-bolt"></i></button>
-                        <button onclick="toggleNotificationsEnabled()" id="fab-notifs" class="qa-btn violet" title="Thông báo"><i class="fas fa-bell"></i></button>
-                    </div>
-                </div>
-               
-                <div class="mt-6 grid grid-cols-2 lg:grid-cols-5 gap-4 text-center text-sm">
-                    <div class="bg-gray-800 rounded-3xl p-4">
-                        <i class="fas fa-face-smile text-amber-400"></i>
-                        <p class="font-medium mt-1">Cảm xúc</p>
-                        <p id="emotion-dashboard" class="text-2xl font-bold text-amber-400">Tập trung 94%</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-3xl p-4">
-                        <i class="fas fa-users text-blue-400"></i>
-                        <p class="font-medium mt-1">Số khuôn mặt</p>
-                        <p id="faces-count" class="text-2xl font-bold text-blue-400">4</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-3xl p-4">
-                        <i class="fas fa-microphone text-red-400"></i>
-                        <p class="font-medium mt-1">Giọng nói</p>
-                        <p id="voice-status" class="text-2xl font-bold text-red-400">Bình thường</p>
-                    </div>
-                    <div class="bg-gray-800 rounded-3xl p-4 relative">
-                        <i class="fas fa-exclamation-triangle text-red-400"></i>
-                        <p class="font-medium mt-1">Vi phạm</p>
-                        <p id="violations-dashboard" class="text-2xl font-bold text-red-400">0</p>
-                        <span id="violation-badge" onclick="simulateAIDetection()" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-2 py-px rounded-2xl font-bold flex items-center gap-1 cursor-pointer">
-                            <span class="live-dot"></span> LIVE
-                        </span>
-                    </div>
-                    <div class="bg-gray-800 rounded-3xl p-4 relative smoking-badge">
-                        <i class="fas fa-smoking text-orange-400"></i>
-                        <p class="font-medium mt-1">Hút thuốc</p>
-                        <p id="smoking-count" class="text-2xl font-bold text-orange-400">0</p>
-                    </div>
-                </div>
-            </div>
-           
-            <div class="lg:col-span-5 bg-gray-900 rounded-3xl p-8 flex flex-col">
-                <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <i class="fas fa-cloud-upload-alt text-violet-400"></i>
-                    AI Cloud Assistant (Grok + GPT-4o)
-                    <span id="cloud-connected-badge" onclick="openAICloudModal()" class="text-[10px] bg-violet-500 text-white px-2 py-0.5 rounded-full hidden">LIVE</span>
-                </h3>
-                <div id="ai-cloud-chat" class="flex-1 bg-gray-800 rounded-3xl p-4 overflow-y-auto max-h-[420px] space-y-4 text-sm"></div>
-                <div class="mt-4 flex gap-2">
-                    <input id="cloud-chat-input" type="text" placeholder="Hỏi AI Cloud về tình hình phòng thi hoặc hút thuốc..."
-                           class="flex-1 bg-gray-900 border border-gray-700 rounded-3xl px-5 py-3 focus:outline-none focus:border-violet-500">
-                    <button onclick="sendCloudChatMessage()" class="px-6 bg-violet-600 hover:bg-violet-700 rounded-3xl font-medium flex items-center justify-center transition-all active:scale-95">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button onclick="clearAIChatHistory()" class="px-4 bg-gray-800 hover:bg-gray-700 rounded-3xl font-medium flex items-center gap-2">
-                        <i class="fas fa-trash"></i> Xóa lịch sử
-                    </button>
-                </div>
-                <p class="text-[10px] text-gray-400 text-center mt-2">Hỗ trợ Grok, GPT-4o, Gemini, Claude, DeepSeek</p>
-            </div>
+<!-- HERO -->
+<header class="hero-bg pt-32 pb-32 text-center relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(at_center,#10b981_0%,transparent_70%)] opacity-20"></div>
+    <div class="max-w-5xl mx-auto px-6 relative">
+        <div class="inline-flex items-center gap-3 bg-white/10 border border-white/20 rounded-full px-6 py-2.5 text-sm mb-8 backdrop-blur-md">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span class="font-medium">Phiên bản 2026 • AI v4.1 • Anti-Deepfake</span>
         </div>
 
-        <!-- TRANG ĐĂNG KÝ KHUÔN MẶT -->
-        <div id="page-register-face" class="hidden">
-            <div class="bg-gray-900 rounded-3xl p-8">
-                <h2 class="text-2xl font-semibold mb-8 flex items-center gap-3"><i class="fas fa-id-card"></i> Đăng ký Khuôn mặt + AI Training (128D Vector)</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <div class="camera-container aspect-video relative">
-                            <video id="video-register" autoplay playsinline class="w-full h-full object-cover"></video>
-                            <canvas id="canvas-register" class="absolute top-0 left-0 w-full h-full hidden"></canvas>
-                            <canvas id="ai-overlay-register" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
-                            <div id="register-status" class="absolute bottom-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded-2xl flex items-center gap-2 hidden">
-                                <div class="live-dot"></div> ĐANG TRAIN VECTOR 128 CHIỀU...
-                            </div>
-                        </div>
-                        <div class="flex gap-4 mt-6">
-                            <button onclick="startCamera('video-register')" class="flex-1 py-4 bg-gray-800 hover:bg-gray-700 rounded-3xl font-medium">📹 Mở Camera</button>
-                            <label class="flex-1 py-4 bg-gray-800 hover:bg-gray-700 rounded-3xl font-medium text-center cursor-pointer flex items-center justify-center gap-2">
-                                <i class="fas fa-upload"></i> Tải ảnh
-                                <input type="file" id="face-upload-input" accept="image/*" class="hidden" onchange="handleFaceUpload(event)">
-                            </label>
-                            <button onclick="captureFace()" class="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-medium flex items-center justify-center gap-2">
-                                <i class="fas fa-camera"></i> Chụp &amp; Train AI
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="font-medium mb-4 flex justify-between"><span>AI Khuôn mặt đã học</span> <span onclick="clearFaces()" class="text-red-400 text-xs cursor-pointer">Xóa tất cả</span></h3>
-                        <div id="face-list" class="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto"></div>
-                        <button onclick="saveFaceToSystem()" class="mt-8 w-full py-4 bg-emerald-600 hover:bg-emerald-700 rounded-3xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-95">
-                            <i class="fas fa-brain"></i> LƯU VÀO MÔ HÌNH AI (128D)
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BÁO CÁO (REPORTS) -->
-        <div id="page-reports" class="hidden bg-gray-900 rounded-3xl p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold flex items-center gap-3"><i class="fas fa-file-chart-column"></i> Báo cáo thông minh</h2>
-                <div class="flex gap-3">
-                    <button onclick="exportCsv()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-3xl flex items-center gap-2 text-sm">CSV 1 click</button>
-                    <button onclick="previewPdfReport()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 rounded-3xl flex items-center gap-2 text-sm">Preview PDF</button>
-                    <button onclick="aiSummarizeReport()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-3xl flex items-center gap-2 text-sm">Tóm tắt bằng AI</button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-800 rounded-3xl p-4">
-                    <h4 class="font-semibold mb-3">Tổng quan vi phạm</h4>
-                    <div id="report-summary" class="text-sm text-gray-300">Không có dữ liệu.</div>
-                </div>
-                <div class="bg-gray-800 rounded-3xl p-4">
-                    <h4 class="font-semibold mb-3">Preview / Export</h4>
-                    <div id="pdf-preview" class="bg-gray-900 rounded-2xl p-4 min-h-[200px] text-sm text-gray-300">Preview sẽ hiển thị ở đây.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- GIÁM SÁT THI -->
-        <div id="page-monitor" class="hidden">
-            <div class="flex justify-between items-end mb-8">
-                <h2 class="text-3xl font-bold flex items-center gap-3"><i class="fas fa-video"></i> Giám sát AI Trực Tiếp <span class="ml-3 text-orange-400 text-lg"><i class="fas fa-smoking"></i> Phát hiện hút thuốc lá</span></h2>
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center gap-2 text-sm cursor-pointer">
-                        <input type="checkbox" id="monitor-toggle" checked onchange="toggleMonitoring()" class="w-6 h-6 accent-emerald-500">
-                        <span class="font-medium">AI GIÁM SÁT 24/7 • 60 FPS • REAL MODEL</span>
-                    </label>
-                    <button onclick="toggleVoiceAI()" id="voice-ai-btn" class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-3xl flex items-center gap-2 text-sm font-medium transition-all">
-                        <i class="fas fa-microphone"></i> Voice AI + LLM
-                    </button>
-                    <button onclick="simulateAIDetection()" class="px-8 py-2 bg-amber-600 hover:bg-amber-700 rounded-3xl text-white flex items-center gap-2 transition-all">
-                        <i class="fas fa-search"></i> Mô phỏng gian lận
-                    </button>
-                </div>
-            </div>
-            <div class="camera-container aspect-video max-w-5xl mx-auto relative">
-                <video id="video-monitor" autoplay playsinline class="w-full h-full object-cover"></video>
-                <canvas id="ai-overlay-monitor" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
-                <div id="recognition-result" class="video-overlay p-6 flex flex-col justify-end"></div>
-            </div>
-            <div class="mt-8 flex justify-center gap-4 text-sm">
-                <button onclick="switchPage('page-attendance')" class="px-8 py-3 bg-gray-800 hover:bg-gray-700 rounded-3xl text-white flex items-center gap-3">
-                    <i class="fas fa-list-check"></i> Chuyển sang Điểm danh
-                </button>
-                <button onclick="switchPage('page-violations-db')" class="px-8 py-3 bg-orange-600 hover:bg-orange-700 rounded-3xl text-white flex items-center gap-3">
-                    <i class="fas fa-database"></i> Xem Cơ sở dữ liệu vi phạm
-                </button>
-            </div>
-        </div>
-
-        <!-- ĐIỂM DANH -->
-        <div id="page-attendance" class="hidden bg-gray-900 rounded-3xl p-8">
-            <h2 class="text-2xl font-semibold mb-8 flex items-center gap-2"><i class="fas fa-list-check"></i> Điểm danh bằng AI Khuôn mặt (Real-time)</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="text-left text-gray-400 text-sm">
-                            <th class="pb-4">Mã HS</th>
-                            <th class="pb-4">Họ tên</th>
-                            <th class="pb-4">AI Confidence</th>
-                            <th class="pb-4 text-center">Trạng thái</th>
-                            <th class="pb-4 text-center">Thời gian</th>
-                        </tr>
-                    </thead>
-                    <tbody id="attendance-table" class="text-sm"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- PHÂN TÍCH NÂNG CAO -->
-        <div id="page-advanced-analytics" class="hidden bg-gray-900 rounded-3xl p-8">
-            <h2 class="text-3xl font-bold mb-8 flex items-center gap-3"><i class="fas fa-chart-bar"></i> Phân tích AI Nâng cao • Thời gian thực (Anti-Smoking)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-3xl p-6">
-                    <p class="text-gray-300 text-sm">Tổng khuôn mặt nhận diện</p>
-                    <p id="total-faces-stat" class="text-5xl font-bold mt-2">187</p>
-                    <p class="text-xs text-blue-300 mt-1">+14 trong 5 phút</p>
-                </div>
-                <div class="bg-gradient-to-br from-emerald-900 to-emerald-800 rounded-3xl p-6">
-                    <p class="text-gray-300 text-sm">Độ chính xác trung bình</p>
-                    <p id="average-accuracy" class="text-5xl font-bold mt-2">99.7%</p>
-                    <p class="text-xs text-emerald-300 mt-1">↑ 0.5% so với hôm qua</p>
-                </div>
-                <div class="bg-gradient-to-br from-amber-900 to-amber-800 rounded-3xl p-6">
-                    <p class="text-gray-300 text-sm">Các vi phạm phát hiện</p>
-                    <p id="violations-stat" class="text-5xl font-bold mt-2 text-red-300">11</p>
-                    <p class="text-xs text-amber-300 mt-1">3 gian lận bằng giọng nói</p>
-                </div>
-                <div class="bg-gradient-to-br from-orange-900 to-red-800 rounded-3xl p-6">
-                    <p class="text-gray-300 text-sm">Hút thuốc lá</p>
-                    <p id="smoking-stat" class="text-5xl font-bold mt-2 text-orange-300">4</p>
-                    <p class="text-xs text-orange-300 mt-1">Phát hiện COCO-SSD</p>
-                </div>
-                <div class="bg-gradient-to-br from-purple-900 to-purple-800 rounded-3xl p-6">
-                    <p class="text-gray-300 text-sm">Thời gian xử lý trung bình</p>
-                    <p id="avg-processing-time" class="text-5xl font-bold mt-2">28ms</p>
-                    <p class="text-xs text-purple-300 mt-1">TensorFlow.js + COCO-SSD</p>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-gray-800 rounded-3xl p-6">
-                    <h4 class="font-medium mb-4">Xu hướng nhận diện khuôn mặt (giờ qua)</h4>
-                    <canvas id="face-trend-chart" class="w-full" height="280"></canvas>
-                </div>
-                <div class="bg-gray-800 rounded-3xl p-6">
-                    <h4 class="font-medium mb-4">Loại vi phạm theo thời gian (có hút thuốc)</h4>
-                    <canvas id="violation-chart" class="w-full" height="280"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- CƠ SỞ DỮ LIỆU VI PHẠM -->
-        <div id="page-violations-db" class="hidden bg-gray-900 rounded-3xl p-8">
-            <div class="flex justify-between mb-8">
-                <h2 class="text-3xl font-bold flex items-center gap-3"><i class="fas fa-database"></i> Cơ sở dữ liệu vi phạm • Anti-Smoking AI</h2>
-                <button onclick="clearViolationsDB()" class="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-3xl flex items-center gap-2 text-white">
-                    <i class="fas fa-trash"></i> Xóa toàn bộ DB
-                </button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-left text-gray-400 border-b border-gray-700">
-                            <th class="pb-4">Thời gian</th>
-                            <th class="pb-4">Học sinh</th>
-                            <th class="pb-4">Loại vi phạm</th>
-                            <th class="pb-4">Mô tả</th>
-                            <th class="pb-4 text-center">AI Confidence</th>
-                        </tr>
-                    </thead>
-                    <tbody id="violations-db-table" class="divide-y divide-gray-800"></tbody>
-                </table>
-            </div>
-            <p class="text-xs text-gray-400 mt-4">Dữ liệu được lưu trong localStorage (cơ sở dữ liệu thực tế trên trình duyệt).</p>
-        </div>
-
-        <!-- GIÁM SÁT HỆ THỐNG -->
-        <div id="page-system-monitor" class="hidden bg-gray-900 rounded-3xl p-8">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold flex items-center gap-3">
-                    <i class="fas fa-server"></i> 
-                    Giám sát Hệ thống AI Pro v3.3 (Real-time Error Log)
-                </h2>
-                <div class="flex gap-4">
-                    <button onclick="simulateSystemError()" 
-                            class="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-3xl flex items-center gap-2 text-white">
-                        <i class="fas fa-bug"></i> Mô phỏng lỗi
-                    </button>
-                    <button onclick="clearSystemLogs()" 
-                            class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-3xl flex items-center gap-2">
-                        <i class="fas fa-trash"></i> Xóa log
-                    </button>
-                </div>
-            </div>
-
-            <!-- Status Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                <div id="sys-camera-status" class="bg-gray-800 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-video text-3xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium">Camera</p>
-                    <span id="camera-dot" class="inline-flex items-center gap-1 text-emerald-400 text-sm"><span class="live-dot"></span> ONLINE</span>
-                </div>
-                <div id="sys-model-status" class="bg-gray-800 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-brain text-3xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium">Mô hình AI</p>
-                    <span id="model-dot" class="inline-flex items-center gap-1 text-emerald-400 text-sm"><span class="live-dot"></span> LOADED</span>
-                </div>
-                <div id="sys-voice-status" class="bg-gray-800 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-microphone text-3xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium">Voice AI</p>
-                    <span id="voice-dot" class="inline-flex items-center gap-1 text-emerald-400 text-sm"><span class="live-dot"></span> READY</span>
-                </div>
-                <div id="sys-cloud-status" class="bg-gray-800 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-cloud-upload-alt text-3xl text-violet-400 mb-2"></i>
-                    <p class="font-medium">AI Cloud</p>
-                    <span id="cloud-dot" class="inline-flex items-center gap-1 text-gray-400 text-sm"><i class="fas fa-times"></i> OFFLINE</span>
-                </div>
-                <div id="sys-db-status" class="bg-gray-800 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-database text-3xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium">Cơ sở dữ liệu</p>
-                    <span id="db-dot" class="inline-flex items-center gap-1 text-emerald-400 text-sm"><span class="live-dot"></span> OK</span>
-                </div>
-                <div id="sys-overall-status" class="bg-gradient-to-br from-emerald-900 to-teal-900 rounded-3xl p-5 flex flex-col items-center text-center">
-                    <i class="fas fa-heartbeat text-3xl text-emerald-400 mb-2"></i>
-                    <p class="font-medium">Tổng trạng thái</p>
-                    <span id="overall-dot" class="text-2xl font-bold text-emerald-400">99.8% HEALTHY</span>
-                </div>
-            </div>
-
-            <!-- Real-time System Log -->
-            <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-                <i class="fas fa-terminal"></i> 
-                Nhật ký hệ thống (Real-time Error &amp; Info)
-            </h3>
-            <div id="system-log-container" class="bg-gray-950 border border-gray-700 rounded-3xl p-4 h-96 overflow-y-auto font-mono text-sm space-y-2"></div>
-            
-            <p class="text-xs text-gray-400 mt-4 text-center">Mọi lỗi camera, model, API, database… đều được ghi log tự động và hiển thị ngay tại đây.</p>
-        </div>
-
-        <!-- ADMIN -->
-        <div id="page-admin" class="hidden bg-gray-900 rounded-3xl p-8">
-            <div class="flex justify-between mb-8">
-                <h2 class="text-3xl font-bold">Quản trị viên AI Pro v3.3</h2>
-                <div class="flex gap-3">
-                    <button onclick="trainAllFaces()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-3xl flex items-center gap-2">
-                        <i class="fas fa-brain"></i> Train lại toàn bộ mô hình
-                    </button>
-                    <button onclick="clearAllData()" class="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-3xl flex items-center gap-2 text-white">
-                        <i class="fas fa-trash"></i> Reset hệ thống
-                    </button>
-                </div>
-            </div>
-            <div class="text-sm text-gray-400 mb-6">Tất cả mô hình TensorFlow.js + COCO-SSD đã được tối ưu. Mô hình AI thật đang chạy real-time trên trình duyệt.</div>
-            <div class="bg-gray-800 rounded-3xl p-6">
-                <h4 class="font-semibold mb-3">Mô hình AI đang hoạt động:</h4>
-                <ul class="space-y-2 text-sm">
-                    <li class="flex justify-between"><span>face-api.js (128D vector)</span><span class="text-emerald-400">99.9% chính xác</span></li>
-                    <li class="flex justify-between"><span>COCO-SSD (object detection)</span><span class="text-emerald-400">Phát hiện điện thoại, chai, người + hút thuốc</span></li>
-                    <li class="flex justify-between"><span>Anti-Smoking AI Logic</span><span class="text-orange-400">18% probability trên person detection</span></li>
-                    <li class="flex justify-between"><span>Voice AI + LLM</span><span class="text-emerald-400">Phát hiện từ ngữ gian lận</span></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- AI CLOUD MODAL -->
-<div id="ai-cloud-modal" class="hidden fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center">
-    <div class="bg-gray-900 rounded-3xl p-8 max-w-lg w-full mx-4 modal-pop">
-        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2"><i class="fas fa-cloud-upload-alt text-violet-400"></i> Kết nối AI Cloud (LLM)</h3>
-        <div class="space-y-6">
-            <div>
-                <label class="text-sm text-gray-400 block mb-2">Nhà cung cấp AI</label>
-                <select id="cloud-provider" class="w-full bg-gray-800 border border-gray-700 rounded-3xl px-5 py-4">
-                    <option value="openai">OpenAI (GPT-4o-mini)</option>
-                    <option value="grok" selected>xAI Grok (grok-beta)</option>
-                    <option value="gemini">Google Gemini 2.0</option>
-                    <option value="claude">Anthropic Claude 3.5</option>
-                    <option value="deepseek">DeepSeek Chat</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-sm text-gray-400 block mb-2">API Key</label>
-                <input id="cloud-api-key" type="password" placeholder="sk-... / gsk_... / AIza..."
-                       class="w-full bg-gray-800 border border-gray-700 rounded-3xl px-5 py-4">
-            </div>
-            <div class="flex gap-3">
-                <button onclick="testAICloudConnection()" class="flex-1 py-3 bg-violet-600 hover:bg-violet-700 rounded-3xl font-semibold">Kiểm tra kết nối</button>
-                <button onclick="saveAICloudSettings()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-3xl font-semibold">Lưu &amp; Kết nối ngay</button>
-            </div>
-        </div>
-        <button onclick="document.getElementById('ai-cloud-modal').classList.add('hidden')" class="mt-6 w-full py-3 bg-gray-800 hover:bg-gray-700 rounded-3xl">Đóng</button>
-    </div>
-</div>
-
-<!-- AI SETTINGS MODAL -->
-<div id="ai-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center">
-    <div class="bg-gray-900 rounded-3xl p-8 max-w-2xl w-full mx-4 modal-pop">
-        <h3 class="text-2xl font-bold mb-6">⚙️ Cài đặt AI Nâng cao (Local + Cloud + Anti-Smoking)</h3>
-        <div class="grid grid-cols-2 gap-6">
-            <label class="flex items-center gap-3 cursor-pointer p-4 bg-gray-800 rounded-3xl"><input type="checkbox" id="real-time-detection" checked class="w-5 h-5 accent-emerald-500"><span class="text-sm">Phát hiện real-time 60 FPS</span></label>
-            <label class="flex items-center gap-3 cursor-pointer p-4 bg-gray-800 rounded-3xl"><input type="checkbox" id="emotion-detection" checked class="w-5 h-5 accent-emerald-500"><span class="text-sm">Phân tích cảm xúc + head pose</span></label>
-            <label class="flex items-center gap-3 cursor-pointer p-4 bg-gray-800 rounded-3xl"><input type="checkbox" id="voice-ai" checked class="w-5 h-5 accent-emerald-500"><span class="text-sm">Voice AI + LLM phân tích</span></label>
-            <label class="flex items-center gap-3 cursor-pointer p-4 bg-gray-800 rounded-3xl"><input type="checkbox" id="coco-ssd" checked class="w-5 h-5 accent-emerald-500"><span class="text-sm">COCO-SSD + Anti-Smoking detection</span></label>
-            <label class="flex items-center gap-3 cursor-pointer p-4 bg-gray-800 rounded-3xl"><input type="checkbox" id="smoking-detection" checked class="w-5 h-5 accent-orange-500"><span class="text-sm">Phát hiện hút thuốc lá (COCO-SSD)</span></label>
-        </div>
-        <div class="flex gap-4 mt-8">
-            <button onclick="saveAISettings()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-3xl font-semibold">Áp dụng cài đặt</button>
-            <button onclick="document.getElementById('ai-settings-modal').classList.add('hidden')" class="flex-1 py-3 bg-gray-800 hover:bg-gray-700 rounded-3xl">Đóng</button>
-        </div>
-    </div>
-</div>
-
-<!-- USAGE GUIDE MODAL -->
-<div id="usage-guide-modal" onclick="if(event.target.id==='usage-guide-modal')this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[10000] flex items-center justify-center">
-    <div class="bg-gray-900 rounded-3xl p-8 max-w-2xl w-full mx-4 modal-pop">
-        <h3 class="text-2xl font-bold mb-4">❓ Hướng dẫn sử dụng FaceGuard AI Pro</h3>
-        <div class="space-y-4 text-sm text-gray-300">
-            <div class="flex gap-3 mb-3">
-                <button onclick="showGuideSection('main')" id="guide-tab-main" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Tổng quan</button>
-                <button onclick="showGuideSection('coco')" id="guide-tab-coco" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Tài liệu COCO-SSD</button>
-                <button onclick="showGuideSection('smoking')" id="guide-tab-smoking" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Hướng dẫn Anti-Smoking</button>
-                <button onclick="showGuideSection('community')" id="guide-tab-community" class="px-3 py-2 bg-gray-800 rounded-2xl text-sm">Cộng đồng</button>
-            </div>
-
-            <div id="usage-guide-content" class="text-sm text-gray-300">
-                <!-- initial main content rendered by JS -->
-            </div>
-
-        </div>
-        <div class="mt-6 flex gap-3 justify-between items-center">
-            <div>
-                <button id="usage-demo-face" onclick="scanFaceId({duration:900,success:true,color:'linear-gradient(135deg,#06b6d4,#7c3aed)'})" class="py-2 px-4 bg-emerald-600 rounded-3xl">Demo Face ID</button>
-                <button onclick="document.getElementById('usage-guide-modal').classList.add('hidden')" class="ml-3 py-2 px-4 bg-gray-800 rounded-3xl">Đóng</button>
-            </div>
-            <div class="text-xs text-gray-400">Cần quyền camera cho demo Face ID trực tiếp.</div>
-        </div>
-    </div>
-</div>
-
-<!-- VERSION MODAL -->
-<div id="version-modal" onclick="if(event.target.id==='version-modal')this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[10000] flex items-center justify-center">
-    <div class="bg-gray-900 rounded-3xl p-8 max-w-md text-center modal-pop">
-        <h2 class="text-3xl font-bold mb-2">FaceGuard AI Pro v3.3</h2>
-        <p class="text-emerald-400">Phiên bản 3.3 • Nâng cấp tháng 3/2026</p>
-        <ul class="text-left mt-8 space-y-3 text-sm">
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> Tích hợp Grok + GPT-4o native</li>
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> Real-time face-api + COCO-SSD (MÔ HÌNH AI THẬT)</li>
-            <li class="flex gap-2"><i class="fas fa-check text-orange-400"></i> <strong>PHÁT HIỆN HÚT THUỐC LÁ</strong> bằng COCO-SSD</li>
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> Cơ sở dữ liệu vi phạm đầy đủ</li>
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>GIÁM SÁT HỆ THỐNG</strong> realtime log lỗi</li>
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> Voice AI + LLM phân tích gian lận</li>
-            <li class="flex gap-2"><i class="fas fa-check text-emerald-400"></i> Export báo cáo + phần phụ trợ</li>
-        </ul>
-        <button onclick="document.getElementById('version-modal').classList.add('hidden')" class="mt-8 w-full py-3 bg-emerald-600 rounded-3xl">Tuyệt vời! Đã nâng cấp</button>
-    </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-8 right-8 bg-emerald-600 text-white px-8 py-5 rounded-3xl shadow-2xl flex items-center gap-3 text-lg z-[10000] transition-all">
-    <i class="fas fa-check-circle"></i>
-    <span id="toast-text" class="font-semibold"></span>
-</div>
-
-<!-- NOTIFICATION CENTER -->
-<div id="notification-center" class="hidden fixed top-16 right-8 w-96 bg-gray-900 border border-gray-800 rounded-3xl p-4 z-[10001] shadow-2xl">
-    <div class="flex items-center justify-between mb-3">
-        <h4 class="font-semibold">Trung tâm Thông báo</h4>
-        <div class="flex items-center gap-2">
-            <button onclick="clearAllNotifications()" class="text-xs text-gray-400 hover:text-white">Xóa tất cả</button>
-            <button onclick="toggleNotificationCenter()" class="text-xs text-gray-400 hover:text-white">Đóng</button>
-        </div>
-    </div>
-    <div id="notification-list" class="max-h-64 overflow-y-auto"></div>
-    <div class="mt-3 text-xs text-gray-400">Cho phép thông báo trình duyệt để nhận alert khi tab khác đang mở.</div>
-    <div class="mt-3 flex gap-2">
-        <button onclick="toggleNotificationsEnabled()" class="flex-1 py-2 bg-emerald-600 rounded-2xl text-sm">Bật/Tắt Notification API</button>
-    </div>
-</div>
-
-<script>
-// Show a quick VIP loader on initial script run
-try { showLoader('FaceGuard AI Pro', 'Chuẩn bị môi trường AI... (VIP)', 1600); } catch(e) {}
-// ==================== BIẾN GLOBAL ====================
-let currentUser = null;
-let isMonitoring = false;
-let savedFaces = JSON.parse(localStorage.getItem('faceguard_faces')) || [
-    { id: "HS2025001", name: "Nguyễn Văn A", type: "Học sinh", img: "https://i.pravatar.cc/128?img=1" },
-    { id: "GV001", name: "Cô Trần Thị B", type: "Giáo viên", img: "https://i.pravatar.cc/128?img=44" }
-];
-let violationsLog = JSON.parse(localStorage.getItem('faceguard_violations')) || [];
-let systemLogs = JSON.parse(localStorage.getItem('faceguard_system_logs')) || [];
-let smokingCount = 0;
-let violationsCount = 0;
-let ssdModel = null;
-let modelsLoaded = false;
-let voiceRecognition = null;
-let aiApiKey = localStorage.getItem('faceguard_aikey') || '';
-let aiProvider = localStorage.getItem('faceguard_provider') || 'grok';
-let aiSettings = { realTime: true, emotion: true, voice: true, coco: true, smoking: true, confidence: 0.88 };
-let faceTrendChart, violationChart;
-
-// ==================== TAILWIND INIT ====================
-function initTailwind() {
-    tailwind.config = { content: [], theme: { extend: {} } };
-}
-
-// ==================== AI CLOUD ====================
-async function callAICloud(prompt) {
-    if (!aiApiKey) return "Chưa kết nối AI Cloud. Vui lòng kết nối trước.";
-    const isGrok = aiProvider === 'grok';
-    const url = isGrok ? 'https://api.x.ai/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
-    const model = isGrok ? 'grok-beta' : 'gpt-4o-mini';
-    try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${aiApiKey}` },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    { role: "system", content: "Bạn là trợ lý giám sát thi cử FaceGuard AI Pro. Trả lời ngắn gọn, chuyên nghiệp, bằng tiếng Việt." },
-                    { role: "user", content: prompt }
-                ],
-                temperature: 0.6,
-                max_tokens: 400
-            })
-        });
-        const data = await res.json();
-        return data.choices[0].message.content.trim();
-    } catch (err) {
-        logSystemEvent('error', 'AI Cloud lỗi kết nối', err.message);
-        return "❌ Lỗi kết nối AI Cloud.";
-    }
-}
-async function testAICloudConnection() {
-    const key = document.getElementById('cloud-api-key').value.trim();
-    const provider = document.getElementById('cloud-provider').value;
-    if (!key) return showToast("Vui lòng nhập API Key!", true);
-    const originalKey = aiApiKey;
-    aiApiKey = key;
-    aiProvider = provider;
-    const response = await callAICloud("Kiểm tra kết nối FaceGuard AI Pro v3.3.");
-    aiApiKey = originalKey;
-    showToast(response.includes("❌") ? "❌ Kết nối thất bại" : "✅ Kết nối thành công với " + provider.toUpperCase(), response.includes("❌"));
-}
-function saveAICloudSettings() {
-    aiApiKey = document.getElementById('cloud-api-key').value.trim();
-    aiProvider = document.getElementById('cloud-provider').value;
-    if (aiApiKey) {
-        localStorage.setItem('faceguard_aikey', aiApiKey);
-        localStorage.setItem('faceguard_provider', aiProvider);
-        document.getElementById('cloud-ai-badge').classList.remove('hidden');
-        document.getElementById('cloud-connected-badge').classList.remove('hidden');
-        document.getElementById('cloud-status-text').innerHTML = `✅ ${aiProvider.toUpperCase()} LIVE`;
-        showToast(`Đã kết nối AI Cloud ${aiProvider.toUpperCase()}!`, false);
-        logSystemEvent('success', 'AI Cloud đã kết nối', aiProvider.toUpperCase());
-    }
-    document.getElementById('ai-cloud-modal').classList.add('hidden');
-}
-function openAICloudModal() {
-    document.getElementById('cloud-api-key').value = aiApiKey;
-    document.getElementById('cloud-provider').value = aiProvider;
-    document.getElementById('ai-cloud-modal').classList.remove('hidden');
-}
-async function sendCloudChatMessage() {
-    const input = document.getElementById('cloud-chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-    addCloudChatMessage("Bạn", message, true);
-    input.value = '';
-    const thinking = addCloudChatMessage("AI Cloud", "Đang suy nghĩ...", false);
-    const response = await callAICloud(message);
-    document.getElementById('ai-cloud-chat').removeChild(thinking);
-    addCloudChatMessage("AI Cloud", response, false);
-}
-function addCloudChatMessage(sender, text, isUser) {
-    const container = document.getElementById('ai-cloud-chat');
-    const div = document.createElement('div');
-    div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} chat-bubble`;
-    div.innerHTML = `
-        <div class="${isUser ? 'bg-violet-600 text-white' : 'bg-gray-700'} max-w-[82%] rounded-3xl px-5 py-3">
-            <div class="text-xs opacity-70 mb-1">${sender}</div>
-            <p>${text}</p>
-        </div>
-    `;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    // Save to session history for AI Cloud Memory
-    try {
-        window.aiChatHistory = window.aiChatHistory || JSON.parse(sessionStorage.getItem('faceguard_ai_chat') || '[]');
-        window.aiChatHistory.push({ time: new Date().toLocaleTimeString('vi-VN'), sender, text });
-        sessionStorage.setItem('faceguard_ai_chat', JSON.stringify(window.aiChatHistory));
-    } catch (e) {}
-    return div;
-}
-
-// ==================== MÔ HÌNH AI THẬT COCO-SSD ====================
-async function loadRealAIModel() {
-    if (ssdModel) return;
-    try {
-        ssdModel = await cocoSsd.load();
-        modelsLoaded = true;
-        document.getElementById('ai-status').classList.remove('hidden');
-        document.getElementById('ai-models-text').innerHTML = `face-api + <strong>COCO-SSD REAL</strong>`;
-        logSystemEvent('success', 'Mô hình COCO-SSD đã tải thành công', 'Sẵn sàng phát hiện hút thuốc');
-        showToast("Mô hình COCO-SSD đã tải xong!", false);
-    } catch (e) {
-        logSystemEvent('error', 'Không tải được mô hình COCO-SSD', e.message);
-    }
-}
-
-async function drawRealDetections(canvasId, video) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || !ssdModel || !video) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let predictions = [];
-    try {
-        predictions = await ssdModel.detect(video);
-    } catch(e) { return; }
-    let smokingDetectedThisFrame = false;
-    predictions.forEach(pred => {
-        const [x, y, w, h] = pred.bbox;
-        const score = Math.round(pred.score * 100);
-        ctx.strokeStyle = (pred.class === 'cell phone' || pred.class === 'bottle') ? '#ef4444' : '#22c55e';
-        ctx.lineWidth = 6;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#86efac';
-        ctx.strokeRect(x, y, w, h);
-        ctx.fillStyle = 'rgba(16,185,129,0.95)';
-        ctx.fillRect(x - 4, y - 42, w + 8, 36);
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Inter';
-        ctx.fillText(`${pred.class.toUpperCase()} • ${score}%`, x + 10, y - 18);
-        if (pred.class === 'person' && aiSettings.smoking && Math.random() < 0.18) {
-            smokingDetectedThisFrame = true;
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(x + w - 95, y + h - 45, 88, 32);
-            ctx.fillStyle = '#111';
-            ctx.font = '700 14px Inter';
-            ctx.fillText('🚬 HÚT THUỐC!', x + w - 88, y + h - 20);
-        }
-    });
-    if (smokingDetectedThisFrame) {
-        smokingCount++;
-        violationsCount++;
-        document.getElementById('smoking-count').textContent = smokingCount;
-        document.getElementById('violations-dashboard').textContent = violationsCount;
-        const newViolation = { time: new Date().toLocaleTimeString('vi-VN'), student: "Học sinh ngẫu nhiên", type: "Hút thuốc lá", desc: "Phát hiện COCO-SSD", confidence: "94.2%" };
-        violationsLog.unshift(newViolation);
-        if (violationsLog.length > 50) violationsLog.pop();
-        localStorage.setItem('faceguard_violations', JSON.stringify(violationsLog));
-        showSmokingViolationAlert();
-    }
-    drawAIDetections(canvasId, 3);
-}
-
-function showSmokingViolationAlert() {
-    const resultDiv = document.getElementById('recognition-result');
-    resultDiv.innerHTML = `
-        <div class="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-3xl mb-4 shadow-2xl smoking-badge">
-            <div class="flex items-start gap-4">
-                <i class="fas fa-smoking text-6xl flex-shrink-0"></i>
-                <div class="flex-1">
-                    <p class="font-bold text-3xl">🚨 PHÁT HIỆN HÚT THUỐC LÁ!</p>
-                    <p class="text-xl mt-1">COCO-SSD Real Model • Confidence 94%</p>
-                    <p class="text-sm mt-3">Hành vi vi phạm nghiêm trọng - đã ghi vào cơ sở dữ liệu</p>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="this.closest('.video-overlay').innerHTML=''" class="flex-1 text-xs bg-white text-black px-6 py-3 rounded-3xl font-semibold">Đánh dấu đã xử lý</button>
-                        <button onclick="sendCloudChatMessageForViolation()" class="flex-1 text-xs bg-black/30 hover:bg-black/50 px-6 py-3 rounded-3xl font-semibold">Gửi báo cáo AI Cloud</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    setTimeout(() => { if (resultDiv) resultDiv.innerHTML = ''; }, 8000);
-    showToast("🚬 AI đã phát hiện hút thuốc lá!", false);
-    try { addNotification('warning', 'Phát hiện hút thuốc', 'AI đã phát hiện hút thuốc lá (COCO-SSD)'); } catch(e){}
-}
-
-function drawAIDetections(canvasId, faces = 3) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    for (let i = 0; i < faces; i++) {
-        const x = Math.random() * (canvas.width - 220) + 40;
-        const y = Math.random() * (canvas.height - 260) + 60;
-        const w = 170 + Math.random() * 90;
-        const h = 210 + Math.random() * 70;
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 5;
-        ctx.shadowBlur = 25;
-        ctx.strokeRect(x, y, w, h);
-        const face = savedFaces[Math.floor(Math.random() * savedFaces.length)];
-        const confidence = (aiSettings.confidence * 100 + Math.random() * 8).toFixed(1);
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.95)';
-        ctx.fillRect(x - 4, y - 48, w + 8, 38);
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Inter';
-        ctx.fillText(`${face.name} • ${confidence}%`, x + 12, y - 22);
-    }
-}
-
-// ==================== CAMERA ====================
-async function startCamera(videoId) {
-    const video = document.getElementById(videoId);
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 1280, height: 720 } });
-        video.srcObject = stream;
-        video.onloadedmetadata = () => {
-            const canvasId = videoId === 'video-dashboard' ? 'ai-overlay-dashboard' : videoId === 'video-register' ? 'ai-overlay-register' : 'ai-overlay-monitor';
-            const canvas = document.getElementById(canvasId);
-            if (canvas) {
-                canvas.width = video.videoWidth || 1280;
-                canvas.height = video.videoHeight || 720;
-            }
-            if (!modelsLoaded) loadRealAIModel();
-            logSystemEvent('success', 'Camera khởi động thành công', videoId);
-        };
-    } catch (err) {
-        logSystemEvent('error', 'Không thể mở camera', err.message);
-        showToast("Không thể truy cập camera. Kiểm tra quyền!", true);
-    }
-}
-
-// ==================== GIÁM SÁT ====================
-function toggleMonitoring() {
-    isMonitoring = !isMonitoring;
-    const btn = document.getElementById('btn-monitor');
-    const text = document.getElementById('monitor-text');
-    if (isMonitoring) {
-        btn.classList.add('bg-red-600', 'hover:bg-red-700');
-        btn.classList.remove('bg-emerald-600');
-        text.innerHTML = `<i class="fas fa-toggle-off"></i> TẮT GIÁM SÁT AI THẬT`;
-        document.getElementById('camera-text').innerHTML = `<span class="text-emerald-400">AI ĐANG HOẠT ĐỘNG • COCO-SSD LIVE</span>`;
-        startCamera('video-dashboard');
-        startCamera('video-monitor');
-        loadRealAIModel();
-        recognitionInterval = setInterval(async () => {
-            if (!isMonitoring) return;
-            drawAIDetections('ai-overlay-dashboard', Math.floor(Math.random() * 4) + 2);
-            document.getElementById('faces-count').textContent = Math.floor(Math.random() * 6) + 1;
-            document.getElementById('emotion-dashboard').innerHTML = `Tập trung ${85 + Math.floor(Math.random()*14)}%`;
-            const monitorVideo = document.getElementById('video-monitor');
-            if (monitorVideo && monitorVideo.srcObject) await drawRealDetections('ai-overlay-monitor', monitorVideo);
-            if (Math.random() > 0.93) {
-                violationsCount++;
-                document.getElementById('violations-dashboard').textContent = violationsCount;
-            }
-        }, 800);
-        logSystemEvent('info', 'Giám sát AI đã bật', '60 FPS + COCO-SSD real-time');
-        showToast("🚀 Mô hình AI THẬT COCO-SSD + Anti-Smoking đã kích hoạt!", false);
-        try { showIslandEvent('Giám sát đã bật', 'AI đang phân tích camera', { enhance:false, duration:3200 }); } catch(e){}
-    } else {
-        clearInterval(recognitionInterval);
-        btn.classList.remove('bg-red-600', 'hover:bg-red-700');
-        btn.classList.add('bg-emerald-600');
-        text.innerHTML = `<i class="fas fa-toggle-on"></i> BẬT GIÁM SÁT AI THẬT`;
-        logSystemEvent('info', 'Giám sát AI đã tắt', '');
-        try { showIslandEvent('Giám sát đã tắt', 'AI đã dừng phân tích', { enhance:false, duration:2400 }); } catch(e){}
-    }
-}
-
-async function simulateAIDetection() {
-    violationsCount++;
-    document.getElementById('violations-dashboard').textContent = violationsCount;
-    document.getElementById('violations-stat').textContent = violationsCount + 5;
-    const reasonList = ["Nhìn sang phải", "2 khuôn mặt cùng lúc", "Nói chuyện", "Cầm điện thoại", "Head pose bất thường", "Hút thuốc lá"];
-    const reason = reasonList[Math.floor(Math.random() * reasonList.length)];
-    let aiMessage = `🚨 Phát hiện gian lận: ${reason}`;
-    if (reason === "Hút thuốc lá") {
-        smokingCount++;
-        document.getElementById('smoking-count').textContent = smokingCount;
-        aiMessage = `🚬 PHÁT HIỆN HÚT THUỐC LÁ - Mô hình COCO-SSD`;
-    }
-    if (aiApiKey) aiMessage = await callAICloud(`Phát hiện gian lận cho học sinh Nguyễn Văn A. Lý do: ${reason}.`);
-    const resultDiv = document.getElementById('recognition-result');
-    resultDiv.innerHTML = `
-        <div class="bg-gradient-to-r from-amber-500 to-red-500 text-white p-6 rounded-3xl mb-4 shadow-2xl">
-            <div class="flex items-start gap-4">
-                <i class="fas fa-exclamation-triangle text-6xl flex-shrink-0"></i>
-                <div class="flex-1">
-                    <p class="font-bold text-3xl">🚨 AI PHÁT HIỆN GIAN LẬN NGAY LẬP TỨC!</p>
-                    <p class="text-xl mt-1">Nguyễn Văn A (HS2025001)</p>
-                    <p class="text-sm mt-4">${aiMessage}</p>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="this.closest('.video-overlay').innerHTML=''" class="flex-1 text-xs bg-white text-black px-6 py-3 rounded-3xl font-semibold">Đánh dấu đã xử lý</button>
-                        <button onclick="sendCloudChatMessageForViolation()" class="flex-1 text-xs bg-black/30 hover:bg-black/50 px-6 py-3 rounded-3xl font-semibold">Gửi báo cáo AI Cloud</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    violationsLog.unshift({ time: new Date().toLocaleTimeString('vi-VN'), student: "Nguyễn Văn A", type: reason, desc: aiMessage, confidence: "96.8%" });
-    if (violationsLog.length > 50) violationsLog.pop();
-    try { showIslandEvent('AI Phát hiện gian lận', aiMessage, { enhance:true, duration:4800 }); } catch(e){}
-    localStorage.setItem('faceguard_violations', JSON.stringify(violationsLog));
-    if (aiApiKey) addCloudChatMessage("Hệ thống", `🚨 Gian lận mới: ${reason}`, false);
-    showToast("AI Cloud đã phân tích và ghi log vào DB!", false);
-    try { addNotification('error', 'Phát hiện gian lận', aiMessage); } catch(e){}
-    setTimeout(() => { if (resultDiv) resultDiv.innerHTML = ''; }, 12000);
-}
-
-function sendCloudChatMessageForViolation() {
-    addCloudChatMessage("Hệ thống", "Đã gửi báo cáo gian lận đến AI Cloud", false);
-    document.getElementById('recognition-result').innerHTML = '';
-}
-
-// ==================== VOICE AI ====================
-function toggleVoiceAI() {
-    if (!voiceRecognition) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return showToast("Trình duyệt không hỗ trợ Voice AI", true);
-        voiceRecognition = new SpeechRecognition();
-        voiceRecognition.lang = 'vi-VN';
-        voiceRecognition.continuous = true;
-        voiceRecognition.interimResults = true;
-        voiceRecognition.onresult = async (event) => {
-            const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-            document.getElementById('voice-status').innerHTML = `“${transcript.substring(0, 22)}...”`;
-            // Direct voice commands
-            if (transcript.includes('bật giám sát')) { if (!isMonitoring) toggleMonitoring(); }
-            else if (transcript.includes('tắt giám sát')) { if (isMonitoring) toggleMonitoring(); }
-            else if (transcript.includes('mô phỏng vi phạm')) { simulateAIDetection(); }
-            else if (transcript.includes('mở camera')) { startCamera('video-dashboard'); }
-            else if (transcript.includes('mở báo cáo') || transcript.includes('báo cáo')) { switchPage('page-reports'); }
-            else if (transcript.includes('tóm tắt')) { aiSummarizeReport(); }
-            else if (transcript.includes('xuất csv')) { exportCsv(); }
-            else if (transcript.includes('bật thông báo')) { toggleNotificationsEnabled(); }
-            // heuristic detection (cheat/smoking)
-            if (transcript.includes('đáp án') || transcript.includes('cheat') || transcript.includes('thuốc') || transcript.includes('hút')) {
-                simulateAIDetection();
-                if (aiApiKey) {
-                    const analysis = await callAICloud(`Phân tích transcript: "${transcript}". Có dấu hiệu gian lận hoặc hút thuốc không?`);
-                    addCloudChatMessage("Voice AI", analysis, false);
-                }
-            }
-        };
-        voiceRecognition.start();
-        document.getElementById('voice-ai-btn').innerHTML = `<i class="fas fa-microphone-slash"></i> TẮT Voice AI`;
-        document.getElementById('voice-ai-btn').classList.add('bg-red-600', 'text-white');
-        logSystemEvent('success', 'Voice AI đã kích hoạt', 'Sẵn sàng nghe từ khóa gian lận & hút thuốc');
-        showToast("🎤 Voice AI + LLM đã kích hoạt!", false);
-    } else {
-        voiceRecognition.stop();
-        voiceRecognition = null;
-        document.getElementById('voice-ai-btn').innerHTML = `<i class="fas fa-microphone"></i> Voice AI + LLM`;
-        document.getElementById('voice-ai-btn').classList.remove('bg-red-600', 'text-white');
-    }
-}
-
-// ==================== REGISTER FACE ====================
-function handleFaceUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.getElementById('canvas-register');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            canvas.classList.remove('hidden');
-            drawAIDetections('ai-overlay-register', 1);
-            document.getElementById('register-status').classList.remove('hidden');
-            setTimeout(() => {
-                canvas.classList.add('hidden');
-                document.getElementById('register-status').classList.add('hidden');
-                saveUploadedFace(img.src);
-            }, 1800);
-        };
-        img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-function saveUploadedFace(imgSrc) {
-    const name = prompt("Nhập tên thí sinh:", "Học sinh mới") || "Người dùng mới";
-    const id = "HS" + Math.floor(100000 + Math.random() * 900000);
-    savedFaces.push({ id, name, type: "Học sinh", img: imgSrc });
-    localStorage.setItem('faceguard_faces', JSON.stringify(savedFaces));
-    renderSavedFaces();
-    showToast("✅ Ảnh đã train vector 128 chiều thành công!", false);
-}
-function captureFace() {
-    const video = document.getElementById('video-register');
-    if (!video.srcObject) return showToast("Mở camera trước!", true);
-    const canvas = document.getElementById('canvas-register');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    canvas.classList.remove('hidden');
-    drawAIDetections('ai-overlay-register', 1);
-    document.getElementById('register-status').classList.remove('hidden');
-    setTimeout(() => {
-        canvas.classList.add('hidden');
-        document.getElementById('register-status').classList.add('hidden');
-        showToast("✅ Khuôn mặt đã được train vào mô hình!", false);
-    }, 1600);
-}
-function saveFaceToSystem() {
-    const name = "Học sinh mới";
-    const id = "HS" + Math.floor(100000 + Math.random() * 900000);
-    savedFaces.push({ id, name, type: "Học sinh", img: "https://i.pravatar.cc/128?img=" + Math.floor(Math.random() * 70) });
-    localStorage.setItem('faceguard_faces', JSON.stringify(savedFaces));
-    renderSavedFaces();
-    showToast("✅ Train vector 128 chiều thành công!", false);
-}
-function renderSavedFaces() {
-    const container = document.getElementById('face-list');
-    if (!container) return;
-    container.innerHTML = '';
-    savedFaces.forEach(face => {
-        const div = document.createElement('div');
-        div.className = "text-center bg-gray-800 rounded-3xl p-3 hover:scale-110 transition-all cursor-pointer";
-        div.innerHTML = `
-            <img src="${face.img}" class="w-16 h-16 mx-auto rounded-2xl border-4 border-emerald-400 object-cover shadow-inner">
-            <p class="text-xs mt-2 font-semibold">${face.name}</p>
-            <p class="text-[10px] text-emerald-300">${face.id}</p>
-        `;
-        container.appendChild(div);
-    });
-}
-function clearFaces() {
-    if (confirm('Xóa tất cả khuôn mặt đã train?')) {
-        savedFaces = [];
-        localStorage.setItem('faceguard_faces', JSON.stringify(savedFaces));
-        renderSavedFaces();
-        showToast("Đã xóa tất cả dữ liệu khuôn mặt", false);
-    }
-}
-
-// ==================== ATTENDANCE ====================
-function renderAttendance() {
-    const tbody = document.getElementById('attendance-table');
-    tbody.innerHTML = savedFaces.map((face, i) => `
-        <tr class="border-b border-gray-800 hover:bg-emerald-900/30 transition-colors">
-            <td class="py-6 font-mono">${face.id}</td>
-            <td class="py-6">${face.name}</td>
-            <td class="py-6"><span class="font-semibold text-emerald-400">${(98 + Math.random()*2).toFixed(1)}%</span></td>
-            <td class="py-6 text-center"><span class="bg-emerald-400 text-black text-xs px-6 py-2 rounded-3xl font-semibold">ĐÃ NHẬN DIỆN</span></td>
-            <td class="py-6 text-center text-gray-400 text-xs">${new Date().getHours()}:${new Date().getMinutes() + i}</td>
-        </tr>
-    `).join('');
-}
-
-// ==================== CHARTS ====================
-function renderAdvancedCharts() {
-    const trendCanvas = document.getElementById('face-trend-chart');
-    const violationCanvas = document.getElementById('violation-chart');
-    if (trendCanvas) {
-        if (faceTrendChart) faceTrendChart.destroy();
-        faceTrendChart = new Chart(trendCanvas, {
-            type: 'line',
-            data: {
-                labels: ['10:00', '10:10', '10:20', '10:30', '10:40', '10:50', '11:00'],
-                datasets: [{
-                    label: 'Khuôn mặt nhận diện',
-                    data: [12, 18, 31, 27, 45, 39, 52],
-                    borderColor: '#22c55e',
-                    tension: 0.4,
-                    borderWidth: 3
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-    }
-    if (violationCanvas) {
-        if (violationChart) violationChart.destroy();
-        violationChart = new Chart(violationCanvas, {
-            type: 'bar',
-            data: {
-                labels: ['Nhìn ngang', 'Nói chuyện', 'Điện thoại', '2 khuôn mặt', 'Head pose', 'Hút thuốc'],
-                datasets: [{
-                    label: 'Số vi phạm',
-                    data: [3, 5, 2, 4, 1, 4],
-                    backgroundColor: ['#f59e0b', '#f59e0b', '#ef4444', '#f59e0b', '#eab308', '#f59e0b']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-    }
-}
-
-// ==================== GIÁM SÁT HỆ THỐNG ====================
-function logSystemEvent(type, message, details = '') {
-    const entry = {
-        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        type: type,
-        message: message,
-        details: details
-    };
-    systemLogs.unshift(entry);
-    if (systemLogs.length > 100) systemLogs.pop();
-    localStorage.setItem('faceguard_system_logs', JSON.stringify(systemLogs));
-    renderSystemLog();
-    if (type === 'error') {
-        showToast(`❌ Lỗi hệ thống: ${message}`, true);
-        document.getElementById('system-health-badge').classList.add('bg-red-500');
-        setTimeout(() => document.getElementById('system-health-badge').classList.remove('bg-red-500'), 3000);
-    }
-}
-
-function renderSystemLog() {
-    const container = document.getElementById('system-log-container');
-    if (!container) return;
-    container.innerHTML = systemLogs.map(log => `
-        <div class="log-entry flex gap-3 items-start p-3 rounded-2xl border-l-4 ${log.type === 'error' ? 'border-red-500 bg-red-950/30' : log.type === 'warning' ? 'border-amber-500 bg-amber-950/30' : 'border-emerald-500 bg-emerald-950/30'}">
-            <span class="text-xs font-mono text-gray-400 w-14">${log.time}</span>
-            <i class="fas ${log.type === 'error' ? 'fa-times-circle text-red-400' : log.type === 'warning' ? 'fa-exclamation-triangle text-amber-400' : 'fa-info-circle text-emerald-400'} mt-0.5"></i>
-            <div class="flex-1">
-                <span class="font-semibold">${log.message}</span>
-                ${log.details ? `<p class="text-xs text-gray-400 mt-1">${log.details}</p>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-function clearSystemLogs() {
-    if (confirm('Xóa toàn bộ nhật ký hệ thống?')) {
-        systemLogs = [];
-        localStorage.setItem('faceguard_system_logs', JSON.stringify([]));
-        renderSystemLog();
-        showToast('Đã xóa log hệ thống', false);
-    }
-}
-
-function simulateSystemError() {
-    const errors = [
-        { type: 'error', msg: 'Camera không phản hồi', detail: 'Permission denied hoặc thiết bị bị chiếm dụng' },
-        { type: 'warning', msg: 'COCO-SSD model load chậm', detail: 'Mạng yếu hoặc GPU không đủ mạnh' },
-        { type: 'error', msg: 'AI Cloud API timeout', detail: 'API key không hợp lệ' },
-        { type: 'warning', msg: 'Voice AI không nhận diện được giọng nói', detail: 'Microphone bị tắt' }
-    ];
-    const random = errors[Math.floor(Math.random() * errors.length)];
-    logSystemEvent(random.type, random.msg, random.detail);
-    if (random.msg.includes('Camera')) document.getElementById('camera-dot').innerHTML = `<i class="fas fa-times text-red-400"></i> ERROR`;
-}
-
-// ==================== LOGIN & MENU ====================
-function handleLogin() {
-    const username = document.getElementById('login-username').value;
-    if (document.getElementById('login-password').value.length < 4) return showToast("Mật khẩu sai!", true);
-    document.getElementById('2fa-section').classList.remove('hidden');
-    currentUser = {
-        name: username.includes('admin') ? "Quản trị viên" : "Giáo viên Nguyễn Thị Lan",
-        role: username.includes('admin') ? "Admin" : "Giáo viên"
-    };
-}
-function simulateFaceLogin() {
-    // play Face ID scan animation then reveal app
-    scanFaceId({ duration: 900, success: true, color: 'linear-gradient(135deg,#06b6d4,#7c3aed)' }).then(()=>{
-        showToast("✅ Face ID xác thực thành công!", false);
-        document.getElementById('2fa-section').classList.add('hidden');
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        document.getElementById('user-info').classList.remove('hidden');
-        document.getElementById('user-name').textContent = currentUser.name;
-        document.getElementById('user-role').textContent = currentUser.role;
-        document.getElementById('ai-status').classList.remove('hidden');
-        renderMainMenu();
-        switchPage('page-dashboard');
-        renderSavedFaces();
-        renderAttendance();
-        showToast("Chào mừng đến FaceGuard AI Pro v3.3!", false);
-    });
-}
-function verifyOTP() {
-    if (document.getElementById('otp-input').value.length === 6) {
-        // run Face ID scan effect for verification
-        scanFaceId({ duration: 900, success: true, color: 'linear-gradient(135deg,#ffd166,#f97316)' }).then(()=>{
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('user-info').classList.remove('hidden');
-            document.getElementById('user-name').textContent = currentUser.name;
-            document.getElementById('user-role').textContent = currentUser.role;
-            document.getElementById('ai-status').classList.remove('hidden');
-            renderMainMenu();
-            switchPage('page-dashboard');
-            renderSavedFaces();
-            renderAttendance();
-            showToast("Chào mừng đến FaceGuard AI Pro v3.3!", false);
-        });
-    }
-}
-function logout() { location.reload(); }
-
-function renderMainMenu() {
-    const menuHTML = `
-        <a class="menu-item" onclick="switchPage('page-dashboard')" title="Trang chủ"><i class="fas fa-home"></i><span class="label">Trang chủ</span></a>
-        <a class="menu-item" onclick="switchPage('page-register-face')" title="Train Khuôn mặt AI"><i class="fas fa-user-plus"></i><span class="label">Train Khuôn mặt</span></a>
-        <a class="menu-item" onclick="switchPage('page-monitor')" title="Giám sát AI"><i class="fas fa-video"></i><span class="label">Giám sát</span></a>
-        <a class="menu-item" onclick="switchPage('page-attendance')" title="Điểm danh AI"><i class="fas fa-list-check"></i><span class="label">Điểm danh</span></a>
-        <a class="menu-item" onclick="switchPage('page-advanced-analytics')" title="Phân tích AI"><i class="fas fa-chart-bar"></i><span class="label">Phân tích</span></a>
-        <a class="menu-item" onclick="switchPage('page-violations-db')" title="Cơ sở dữ liệu vi phạm"><i class="fas fa-database"></i><span class="label">Vi phạm</span></a>
-        <a class="menu-item" onclick="switchPage('page-reports')" title="Báo cáo"><i class="fas fa-file-alt"></i><span class="label">Báo cáo</span></a>
-        <a class="menu-item" onclick="switchPage('page-system-monitor')" title="Giám sát Hệ thống"><i class="fas fa-server"></i><span class="label">Hệ thống</span></a>
-        <a class="menu-item" id="auto-rollcall-btn" onclick="toggleAutoRollcall()" title="Bật/Tắt Auto Roll-call"><i class="fas fa-check-double"></i><span class="label">Auto Roll-call</span></a>
-        ${currentUser && currentUser.role === 'Admin' ? `<a class="menu-item" onclick="switchPage('page-admin')" title="Quản trị AI"><i class="fas fa-cog"></i><span class="label">Quản trị</span></a>` : ''}
-        <a class="menu-item" id="menu-collapse-toggle" onclick="document.getElementById('main-menu').classList.toggle('compact')" title="Thu gọn/Hiện nhãn"><i class="fas fa-compress-arrows-alt"></i><span class="label">Thu gọn</span></a>
-    `;
-    document.getElementById('main-menu').innerHTML = menuHTML;
-}
-
-function switchPage(page) {
-    document.querySelectorAll('#main-app > div').forEach(div => div.classList.add('hidden'));
-    const target = document.getElementById(page);
-    if (target) target.classList.remove('hidden');
-    if (page === 'page-system-monitor') renderSystemLog();
-    if (page === 'page-advanced-analytics') setTimeout(renderAdvancedCharts, 200);
-}
-
-// ==================== VIOLATIONS DB ====================
-function renderViolationsDB() {
-    const tbody = document.getElementById('violations-db-table');
-    tbody.innerHTML = violationsLog.map(v => `
-        <tr class="hover:bg-gray-800/50">
-            <td class="py-4">${v.time}</td>
-            <td class="py-4">${v.student}</td>
-            <td class="py-4 font-medium ${v.type.includes('Hút') ? 'text-orange-400' : 'text-red-400'}">${v.type}</td>
-            <td class="py-4">${v.desc}</td>
-            <td class="py-4 text-center"><span class="font-semibold text-emerald-400">${v.confidence}</span></td>
-        </tr>
-    `).join('');
-}
-function clearViolationsDB() {
-    if (confirm('Xóa toàn bộ cơ sở dữ liệu vi phạm?')) {
-        violationsLog = [];
-        localStorage.setItem('faceguard_violations', JSON.stringify([]));
-        renderViolationsDB();
-        showToast("Đã xóa DB vi phạm!", false);
-    }
-}
-
-// ==================== UTILS ====================
-function openAISettings() {
-    document.getElementById('ai-settings-modal').classList.remove('hidden');
-}
-function saveAISettings() {
-    document.getElementById('ai-settings-modal').classList.add('hidden');
-    showToast("✅ Cài đặt AI đã được áp dụng!", false);
-}
-function trainAllFaces() {
-    showToast("🔄 Đang train lại toàn bộ mô hình AI...", false);
-    setTimeout(() => showToast("✅ Train thành công!", false), 2200);
-}
-function toggleDarkMode() {
-    showToast("🌙 Dark Mode Pro đã được tối ưu!", false);
-}
-function exportReport() {
-    showToast("📤 Đang xuất báo cáo PDF chi tiết...", false);
-    setTimeout(() => showToast("✅ Báo cáo đã được tải xuống (faceguard-report-2026.pdf)", false), 1600);
-}
-function clearAllData() {
-    if (confirm("Reset toàn bộ hệ thống?")) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-function showVersionModal() {
-    document.getElementById('version-modal').classList.remove('hidden');
-}
-function showToast(text, isError = false) {
-    const toast = document.getElementById('toast');
-    document.getElementById('toast-text').innerHTML = text;
-    toast.style.backgroundColor = isError ? '#dc2626' : '#10b981';
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3400);
-    // island visual for successful toasts
-    if (!isError) {
-        try { showIslandEvent(text, '', { enhance: false, duration: 1800 }); } catch(e){}
-    }
-}
-
-// Responsive: auto-compact main menu on small screens for optimized layout
-function applyMainMenuCompact() {
-    const menu = document.getElementById('main-menu');
-    if (!menu) return;
-    if (window.innerWidth < 980) menu.classList.add('compact');
-    else menu.classList.remove('compact');
-}
-window.addEventListener('load', applyMainMenuCompact);
-window.addEventListener('resize', () => { clearTimeout(window._mmResize); window._mmResize = setTimeout(applyMainMenuCompact, 120); });
-
-// Loader controls
-let loaderInterval = null;
-function showLoader(title = 'FaceGuard AI Pro', sub = 'Đang khởi tạo...', duration = 0) {
-    const g = document.getElementById('global-loader');
-    if (!g) return;
-    document.getElementById('loader-title').textContent = title;
-    document.getElementById('loader-sub').textContent = sub;
-    g.classList.remove('hidden'); g.classList.add('show');
-    const bar = document.getElementById('loader-bar');
-    let w = 6;
-    if (loaderInterval) clearInterval(loaderInterval);
-    loaderInterval = setInterval(()=>{
-        w += Math.random()*6;
-        if (w>98) w = 98;
-        if (bar) bar.style.width = w + '%';
-    }, 450);
-    if (duration && duration>0) setTimeout(()=> hideLoader(), duration);
-}
-function hideLoader(force=false) {
-    const g = document.getElementById('global-loader');
-    if (!g) return;
-    if (loaderInterval) { clearInterval(loaderInterval); loaderInterval = null; }
-    const bar = document.getElementById('loader-bar'); if (bar) bar.style.width = '100%';
-    setTimeout(()=>{ g.classList.add('hidden'); g.classList.remove('show'); if (!force) showToast('✅ Sẵn sàng!', false); }, 300);
-}
-
-
-// ==================== KHỞI ĐỘNG ====================
-// ==================== NOTIFICATIONS, MULTI-CAMERA, REPORTS, VOICE COMMANDS ====================
-let notifications = JSON.parse(localStorage.getItem('faceguard_notifs') || '[]');
-let notificationsEnabled = localStorage.getItem('faceguard_notifs_enabled') === '1';
-function toggleNotificationCenter() {
-    const el = document.getElementById('notification-center');
-    if (!el) return;
-    el.classList.toggle('hidden');
-    renderNotificationCenter();
-}
-function renderNotificationCenter() {
-    const list = document.getElementById('notification-list');
-    if (!list) return;
-    if (notifications.length === 0) {
-        list.innerHTML = '<div class="p-4 text-sm text-gray-400 text-center">Không có thông báo mới.</div>';
-    } else {
-        list.innerHTML = notifications.map(n => `
-            <div class="p-3 border-b border-gray-800 flex justify-between items-start">
-                <div>
-                    <div class="font-semibold">${n.title}</div>
-                    <div class="text-xs text-gray-400 mt-1">${n.msg}</div>
-                    <div class="text-[10px] text-gray-500 mt-2">${n.time}</div>
-                </div>
-                <button onclick="dismissNotification(${n.id})" class="text-xs text-red-400">Xóa</button>
-            </div>
-        `).join('');
-    }
-    const badge = document.getElementById('notif-count');
-    if (notifications.length > 0) { badge.textContent = notifications.length; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
-}
-function addNotification(type, title, msg) {
-    const n = { id: Date.now(), time: new Date().toLocaleTimeString('vi-VN'), type, title, msg };
-    notifications.unshift(n);
-    if (notifications.length > 100) notifications.pop();
-    localStorage.setItem('faceguard_notifs', JSON.stringify(notifications));
-    renderNotificationCenter();
-    try {
-        if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, { body: msg });
-        } else if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'denied') {
-            Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body: msg }); });
-        }
-    } catch (e) {}
-    try {
-        // visual island feedback for notifications (with icon and color)
-        const iconMap = { info: 'fas fa-info-circle', warning: 'fas fa-triangle-exclamation', error: 'fas fa-times-circle', success: 'fas fa-check-circle' };
-        const colorMap = { info: 'linear-gradient(90deg,#06b6d4,#7c3aed)', warning: 'linear-gradient(90deg,#f59e0b,#fb7185)', error: 'linear-gradient(90deg,#ef4444,#941b0c)', success: 'linear-gradient(90deg,#10b981,#06b6d4)' };
-        const opts = { enhance: type === 'error' || type === 'warning', duration: 2000, icon: iconMap[type] || iconMap.info, color: colorMap[type] || colorMap.info };
-        if (typeof showIslandEvent === 'function') showIslandEvent(title, msg, opts);
-        else if (typeof showDynamicIsland === 'function') showDynamicIsland(title, msg, type, 4200);
-    } catch(e){}
-}
-function dismissNotification(id) { notifications = notifications.filter(n => n.id !== id); localStorage.setItem('faceguard_notifs', JSON.stringify(notifications)); renderNotificationCenter(); }
-function clearAllNotifications() { if (confirm('Xóa toàn bộ thông báo?')) { notifications = []; localStorage.setItem('faceguard_notifs', '[]'); renderNotificationCenter(); } }
-function toggleNotificationsEnabled() {
-    notificationsEnabled = !notificationsEnabled; 
-    localStorage.setItem('faceguard_notifs_enabled', notificationsEnabled ? '1' : '0'); 
-    showToast(notificationsEnabled ? '✅ Thông báo trình duyệt đã bật' : '🔕 Thông báo đã tắt', false);
-    try { 
-        // small FaceID-like pulse when toggling
-        scanFaceId({ duration: 700, success: true, color: notificationsEnabled ? 'linear-gradient(90deg,#06b6d4,#7c3aed)' : 'linear-gradient(90deg,#374151,#111827)' });
-    } catch(e){}
-    if (notificationsEnabled && 'Notification' in window && Notification.permission !== 'granted') Notification.requestPermission(); 
-}
-// show dynamic island when toggling notifications
-    // (removed wrapped notification UI) use toggleNotificationsEnabled directly
-
-// Multi-camera simulation
-let multiCameraActive = false;
-function toggleMultiCamera() {
-    multiCameraActive = !multiCameraActive;
-    const btn = document.getElementById('btn-multi-camera');
-    if (multiCameraActive) {
-        btn.classList.add('bg-red-600');
-        // create simulated camera overlays
-        for (let i = 1; i <= 3; i++) {
-            if (!document.getElementById('video-multi-' + i)) {
-                const el = document.createElement('div');
-                el.className = 'mt-4 grid grid-cols-3 gap-3';
-                el.id = 'multi-cam-row';
-                el.innerHTML = `
-                    <div class="camera-container aspect-video relative"><video id="video-multi-1" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-1" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
-                    <div class="camera-container aspect-video relative"><video id="video-multi-2" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-2" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
-                    <div class="camera-container aspect-video relative"><video id="video-multi-3" autoplay playsinline class="w-full h-full object-cover"></video><canvas id="ai-overlay-multi-3" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas></div>
-                `;
-                document.getElementById('camera-dashboard').insertAdjacentElement('afterend', el);
-                // simulate draws
-                setTimeout(() => { drawAIDetections('ai-overlay-multi-1', 2); drawAIDetections('ai-overlay-multi-2', 2); drawAIDetections('ai-overlay-multi-3', 2); }, 600);
-                break;
-            }
-        }
-        showToast('🔀 Chế độ Nhiều Camera (4) đã bật', false);
-    } else {
-        btn.classList.remove('bg-red-600');
-        const row = document.getElementById('multi-cam-row'); if (row) row.remove();
-        showToast('🔁 Chế độ Nhiều Camera đã tắt', false);
-    }
-}
-
-// Record session (12s demo)
-async function recordSession() {
-    const video = document.getElementById('video-dashboard');
-    if (!video || !video.srcObject) return showToast('Mở camera trước khi ghi hình!', true);
-    const mediaStream = video.srcObject;
-    const recorder = new MediaRecorder(mediaStream);
-    const chunks = [];
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `faceguard-session-${Date.now()}.webm`; a.click();
-        addNotification('info', 'Ghi hình hoàn tất', 'Phiên giám sát đã được lưu (demo)');
-        showToast('✅ Phiên ghi hình đã lưu (demo)', false);
-    };
-    // animate a small scan/pulse before starting recording
-    try { await scanFaceId({ duration: 600, success: true, color: 'linear-gradient(90deg,#f59e0b,#fb7185)' }); } catch(e){}
-    recorder.start();
-    showToast('⏺️ Đang ghi (12 giây demo)...', false);
-    try { showIslandEvent('Ghi hình bắt đầu', 'Đang ghi phiên giám sát...', { enhance:false, duration:3500 }); } catch(e){}
-    setTimeout(() => recorder.stop(), 12000);
-}
-
-// Reports export functions
-function exportCsv() {
-    const rows = [['Thời gian','Học sinh','Loại','Mô tả','Confidence']];
-    violationsLog.forEach(v => rows.push([v.time, v.student, v.type, v.desc, v.confidence]));
-    const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'faceguard-violations.csv'; link.click();
-    showToast('📥 CSV đã được tải xuống', false);
-    try { showIslandEvent('CSV đã xuất', 'Báo cáo vi phạm đã được tải xuống', { enhance:false, duration:3000 }); } catch(e){}
-}
-async function previewPdfReport() {
-    const preview = document.getElementById('pdf-preview');
-    preview.innerHTML = '<div class="text-sm text-gray-400">Đang tạo preview PDF...</div>';
-    // simple HTML snapshot
-    const node = document.createElement('div');
-    node.innerHTML = `<h2>Báo cáo vi phạm</h2><ul>${violationsLog.map(v=>`<li>${v.time} - ${v.student} - ${v.type} - ${v.confidence}</li>`).join('')}</ul>`;
-    await html2canvas(node).then(canvas => { document.getElementById('pdf-preview').innerHTML = ''; document.getElementById('pdf-preview').appendChild(canvas); });
-    try { showIslandEvent('Preview PDF sẵn sàng', 'Bạn có thể xem hoặc xuất PDF', { enhance:false, duration:3200 }); } catch(e){}
-}
-async function aiSummarizeReport() {
-    if (!aiApiKey) return showToast('Kết nối AI Cloud trước khi tóm tắt', true);
-    const prompt = `Tóm tắt ngắn các vi phạm trong phiên: ${JSON.stringify(violationsLog.slice(0,10))}`;
-    const res = await callAICloud(prompt);
-    document.getElementById('report-summary').innerText = res;
-    addCloudChatMessage('Hệ thống', 'Tóm tắt báo cáo đã tạo bởi AI', false);
-    try { showIslandEvent('AI Tóm tắt', 'Báo cáo đã được tóm tắt bởi AI', { enhance:true, duration:3200 }); } catch(e){}
-}
-
-// AI Cloud chat history control
-function clearAIChatHistory() { if (confirm('Xóa lịch sử AI Cloud trong phiên?')) { sessionStorage.removeItem('faceguard_ai_chat'); window.aiChatHistory = []; document.getElementById('ai-cloud-chat').innerHTML = '<div class="text-center text-xs text-gray-400 py-4">👋 AI Cloud Assistant (Grok) sẵn sàng hỗ trợ bạn 24/7</div>'; showToast('🧠 Đã xóa lịch sử AI Cloud trong phiên', false); } }
-
-function showUsageGuide() { document.getElementById('usage-guide-modal').classList.remove('hidden'); }
-
-// Usage guide section renderer
-function showGuideSection(section){
-    const container = document.getElementById('usage-guide-content');
-    if(!container) return;
-    // clear active tab styles
-    ['main','coco','smoking','community'].forEach(s=>{ const b = document.getElementById('guide-tab-'+s); if(b) b.classList.remove('bg-emerald-700'); });
-    const tab = document.getElementById('guide-tab-'+section); if(tab) tab.classList.add('bg-emerald-700');
-
-    if(section === 'main'){
-        container.innerHTML = `
-            <p class="font-semibold">Tổng quan ngắn</p>
-            <p>FaceGuard giám sát camera, phát hiện vi phạm và lưu báo cáo. Sử dụng COCO-SSD cho object-detection và face-api cho nhận diện khuôn mặt.</p>
-            <p class="font-semibold mt-3">Các thao tác nhanh</p>
-            <ul class="list-disc ml-5 text-sm">
-                <li>Bật/Tắt giám sát: dùng nút Giám sát hoặc lệnh thoại.</li>
-                <li>Ghi hình phiên: Quick Actions → "Ghi hình phiên".</li>
-                <li>Trung tâm Thông báo: nhấn chuông để xem alert realtime.</li>
-            </ul>
-        `;
-        return;
-    }
-
-    if(section === 'coco'){
-        container.innerHTML = `
-            <p class="font-semibold">Tài liệu tóm tắt COCO-SSD</p>
-            <p>COCO-SSD là mô hình object detection phát hiện nhiều lớp (person, cell phone, cigarette, etc.). Trong FaceGuard, chúng tôi dùng COCO-SSD để phát hiện hành vi (ví dụ: hút thuốc, cầm điện thoại).</p>
-            <p class="font-semibold mt-3">Ví dụ mã (sử dụng CDN model):</p>
-            <pre class="text-xs bg-gray-800 p-3 rounded text-gray-200 overflow-x-auto">const model = await cocoSsd.load();
-const preds = await model.detect(videoElement);
-preds.forEach(p => { if(p.class === 'cell phone' &amp;&amp; p.score&gt;0.6) handlePhone(p); });</pre>
-            <p class="text-xs text-gray-400 mt-2">Lưu ý: threshold confidence tùy theo môi trường (ánh sáng, góc camera).</p>
-        `;
-        return;
-    }
-
-    if(section === 'smoking'){
-        container.innerHTML = `
-            <p class="font-semibold">Hướng dẫn sử dụng Anti-Smoking</p>
-            <p>Anti-Smoking kết hợp object detection (COCO-SSD) và logic time-window: nếu phát hiện đối tượng 'cigarette' hoặc 'hand' gần mặt trong nhiều khung liên tiếp → gắn nhãn vi phạm.</p>
-            <p class="font-semibold mt-3">Cách hiệu chỉnh</p>
-            <ul class="list-disc ml-5 text-sm">
-                <li>Tăng threshold confidence cho môi trường nhiều nhiễu (≥0.7).</li>
-                <li>Sử dụng ROI (vùng quan tâm) xung quanh khuôn mặt để giảm false-positive.</li>
-                <li>Áp dụng smoothing: yêu cầu phát hiện liên tiếp trong N khung (ví dụ 3-5) để chấp nhận vi phạm.</li>
-            </ul>
-            <p class="text-xs text-gray-400 mt-2">Gợi ý: đặt camera gần và hướng thẳng vào đối tượng để tăng độ chính xác.</p>
-        `;
-        return;
-    }
-
-    if(section === 'community'){
-        container.innerHTML = `
-            <p class="font-semibold">Cộng đồng & Hỗ trợ</p>
-            <p>Tham gia cộng đồng để chia sẻ cấu hình camera, threshold, và các mẫu dữ liệu:</p>
-            <ul class="list-disc ml-5 text-sm">
-                <li><strong>GitHub:</strong> https://github.com/your-org/faceguard (ví dụ dự án mã nguồn)</li>
-                <li><strong>Forum:</strong> https://community.faceguard.edu.vn</li>
-                <li><strong>Liên hệ:</strong> support@faceguard.edu.vn</li>
-            </ul>
-            <p class="text-xs text-gray-400 mt-2">Bạn có thể gửi mẫu ảnh (anonymized) để giúp mô hình tinh chỉnh tốt hơn.</p>
-        `;
-        return;
-    }
-}
-
-// initialize guide content when modal opens
-const originalShowUsageGuide = showUsageGuide;
-showUsageGuide = function(){ document.getElementById('usage-guide-modal').classList.remove('hidden'); showGuideSection('main'); };
-
-function exportPdfReport() {
-    const doc = new jspdf.jsPDF();
-    let y = 10;
-    doc.setFontSize(14); doc.text('Báo cáo vi phạm FaceGuard', 14, y); y += 8;
-    doc.setFontSize(10);
-    violationsLog.slice(0, 40).forEach(v => { doc.text(`${v.time} • ${v.student} • ${v.type} • ${v.confidence}`, 14, y); y += 6; if (y > 280) { doc.addPage(); y = 10; } });
-    doc.save('faceguard-report.pdf');
-    showToast('✅ PDF đã được xuất', false);
-}
-
-// Theme toggle
-function toggleTheme() {
-    document.body.classList.toggle('light');
-    const isLight = document.body.classList.contains('light');
-    localStorage.setItem('faceguard_theme', isLight ? 'light' : 'dark');
-    const icon = document.getElementById('theme-icon');
-    if (icon) icon.className = isLight ? 'fas fa-moon text-xl' : 'fas fa-sun text-xl';
-    const msg = isLight ? '🌤 Chế độ Sáng' : '🌙 Chế độ Tối';
-    showToast(msg, false);
-    try { showIslandEvent(isLight ? 'Chế độ Sáng' : 'Chế độ Tối', isLight ? 'Giao diện sáng' : 'Giao diện tối', { enhance: true, duration: 1600, color: isLight ? 'linear-gradient(135deg,#ffd166,#f97316)' : 'linear-gradient(135deg,#06b6d4,#7c3aed)' }); } catch(e){}
-}
-function applyThemeOnLoad() {
-    const t = localStorage.getItem('faceguard_theme') || 'dark';
-    if (t === 'light') { document.body.classList.add('light'); const icon = document.getElementById('theme-icon'); if (icon) icon.className = 'fas fa-moon text-xl'; }
-}
-
-// Quick Actions expand control
-function toggleQaExpand() {
-    const bar = document.getElementById('qa-toolbar');
-    if (!bar) return;
-    bar.classList.toggle('expanded');
-    const expanded = bar.classList.contains('expanded');
-    localStorage.setItem('faceguard_qa_expanded', expanded ? '1' : '0');
-    const icon = document.getElementById('qa-expand-icon');
-    if (icon) icon.className = expanded ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
-}
-function applyQaStateOnLoad() {
-    const bar = document.getElementById('qa-toolbar');
-    if (!bar) return;
-    const exp = localStorage.getItem('faceguard_qa_expanded');
-    if (exp === '1') { bar.classList.add('expanded'); const icon = document.getElementById('qa-expand-icon'); if (icon) icon.className = 'fas fa-chevron-right'; }
-}
-
-// User popover
-function toggleUserMenu() {
-    const pop = document.getElementById('user-popover');
-    if (!pop) return;
-    pop.classList.toggle('hidden');
-}
-document.addEventListener('click', (e) => {
-    const pop = document.getElementById('user-popover');
-    const btn = document.getElementById('user-compact');
-    if (!pop || !btn) return;
-    if (!btn.contains(e.target) && !pop.contains(e.target)) pop.classList.add('hidden');
-});
-
-// Ensure floating QA shows/hides based on page context if needed
-function setCameraQaVisibility(visible) {
-    const el = document.getElementById('camera-qa-overlay');
-    if (!el) return;
-    el.style.display = visible ? 'flex' : 'none';
-}
-
-// Dynamic Island removed — use notifications instead
-function showDynamicIsland(title, sub, type = 'info', duration = 3800) {
-    // Deprecated wrapper kept for compatibility — delegate to island visuals + notifications
-    try {
-        try { addNotification(type, title, sub); } catch (e) { try { showToast(title, false); } catch (e) {} }
-        if (typeof showIslandEvent === 'function') {
-            showIslandEvent(title, sub, { enhance: type === 'error' || type === 'warning', duration });
-        }
-        console.warn('showDynamicIsland is deprecated — use addNotification / showIslandEvent');
-    } catch (e) {}
-}
-function hideDynamicIsland() { /* no-op, dynamic island removed */ }
-
-// island action wiring removed (Dynamic Island disabled)
-
-// Dynamic Island is hooked into addNotification earlier in the file
-
-
-// Auto Roll-call
-let autoRollcallInterval = null;
-function toggleAutoRollcall() {
-    if (!autoRollcallInterval) {
-        autoRollcallInterval = setInterval(() => {
-            // mark all saved faces as present (demo)
-            const now = new Date().toLocaleTimeString('vi-VN');
-            const records = JSON.parse(localStorage.getItem('faceguard_attendance') || '[]');
-            savedFaces.forEach(f => records.push({ id: f.id, name: f.name, time: now }));
-            localStorage.setItem('faceguard_attendance', JSON.stringify(records));
-            addNotification('info', 'Điểm danh tự động', `Đã ghi nhận ${savedFaces.length} học sinh lúc ${now}`);
-            showToast('✅ Auto Roll-call: đã ghi nhận danh sách', false);
-        }, 60000); // every 60s demo
-        document.getElementById('auto-rollcall-btn').classList.add('bg-emerald-600');
-    } else {
-        clearInterval(autoRollcallInterval); autoRollcallInterval = null; document.getElementById('auto-rollcall-btn').classList.remove('bg-emerald-600'); showToast('🔕 Auto Roll-call đã tắt', false);
-    }
-}
-
-function exportAttendanceCsv() {
-    const records = JSON.parse(localStorage.getItem('faceguard_attendance') || '[]');
-    if (!records.length) return showToast('Không có dữ liệu điểm danh để xuất', true);
-    const rows = [['ID','Họ tên','Thời gian']];
-    records.forEach(r => rows.push([r.id, r.name, r.time]));
-    const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'attendance.csv'; link.click();
-    showToast('📥 CSV điểm danh đã tải xuống', false);
-}
-
-
-window.onload = function() {
-    initTailwind();
-    console.log('%c🚀 FaceGuard AI Pro v3.3 - ĐÃ HOÀN THÀNH FULL!', 'color:#f59e0b; font-size:22px; font-weight:700');
-    
-    if (aiApiKey) {
-        document.getElementById('cloud-ai-badge').classList.remove('hidden');
-        document.getElementById('cloud-connected-badge').classList.remove('hidden');
-        document.getElementById('cloud-status-text').innerHTML = `✅ ${aiProvider.toUpperCase()} LIVE`;
-    }
-    
-    const chatContainer = document.getElementById('ai-cloud-chat');
-    chatContainer.innerHTML = `<div class="text-center text-xs text-gray-400 py-4">👋 AI Cloud Assistant (Grok) sẵn sàng hỗ trợ bạn 24/7</div>`;
-    // restore AI chat history in session
-    try { window.aiChatHistory = JSON.parse(sessionStorage.getItem('faceguard_ai_chat') || '[]'); if (window.aiChatHistory && window.aiChatHistory.length) { document.getElementById('ai-cloud-chat').innerHTML = ''; window.aiChatHistory.forEach(m=> addCloudChatMessage(m.sender, m.text, m.sender==='Bạn')); } } catch(e){}
-    // render notification center badge
-    try { renderNotificationCenter(); } catch(e){}
-    // apply theme and QA state from last session
-    try { applyThemeOnLoad(); } catch(e){}
-    try { applyQaStateOnLoad(); } catch(e){}
-    
-    renderMainMenu();
-    renderSavedFaces();
-    renderAttendance();
-    
-    if (violationsLog.length === 0) {
-        violationsLog = [
-            { time: "09:15", student: "Nguyễn Văn A", type: "Hút thuốc lá", desc: "COCO-SSD phát hiện", confidence: "95%" },
-            { time: "09:22", student: "Trần Thị B", type: "Cầm điện thoại", desc: "Object detection", confidence: "98%" }
-        ];
-        localStorage.setItem('faceguard_violations', JSON.stringify(violationsLog));
-    }
-    
-    if (systemLogs.length === 0) {
-        systemLogs = [
-            { time: "12:10:05", type: "success", message: "Hệ thống khởi động thành công", details: "v3.3 Full" },
-            { time: "12:10:12", type: "info", message: "COCO-SSD đã load", details: "" },
-            { time: "12:11:03", type: "warning", message: "Camera latency cao", details: "35ms" }
-        ];
-        localStorage.setItem('faceguard_system_logs', JSON.stringify(systemLogs));
-    }
-    
-    renderSystemLog();
-    
-    console.log('✅ Mô hình AI thật + Cơ sở dữ liệu + Anti-Smoking + Giám sát hệ thống đã sẵn sàng!');
-    showToast('✅ FaceGuard AI Pro v3.3 đã chạy đầy đủ!', false);
-    // hide global loader on full load
-    try { hideLoader(); } catch(e){}
-};
-
-// Real-time stats widget
-setInterval(() => {
-    document.getElementById('gpu-bar').style.width = (45 + Math.random() * 40) + '%';
-    document.getElementById('fps-counter').textContent = (55 + Math.floor(Math.random() * 6)) + ' FPS';
-    document.getElementById('latency-counter').textContent = (24 + Math.floor(Math.random() * 12)) + 'ms';
-    document.getElementById('tracked-faces').textContent = Math.floor(Math.random() * 6) + 1;
-    document.getElementById('confidence-avg').textContent = (97 + (Math.random() * 3)).toFixed(1) + '%';
-    document.getElementById('smoking-live').textContent = smokingCount;
-}, 1100);
-</script>
-
-<!-- FOOTER -->
-<footer class="bg-gray-900 border-t border-gray-800 mt-16 py-8">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-                <h4 class="font-semibold text-emerald-400 mb-4 flex items-center gap-2">
-                    <i class="fas fa-envelope"></i> Liên hệ hỗ trợ
-                </h4>
-                <a href="mailto:tranlegiabao04112011@gmail.com" class="flex items-center gap-2 text-gray-300 hover:text-emerald-400 transition-colors">
-                    <i class="fas fa-envelope-circle-check text-emerald-500"></i>
-                    tranlegiabao04112011@gmail.com
-                </a>
-                <p class="text-xs text-gray-500 mt-2">Phản hồi 24/7 • Hỗ trợ AI Cloud + Anti-Smoking</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-emerald-400 mb-4 flex items-center gap-2">
-                    <i class="fas fa-link"></i> Đường dẫn nhanh
-                </h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="text-gray-300 hover:text-emerald-400 transition">Tài liệu API COCO-SSD</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-emerald-400 transition">Hướng dẫn sử dụng Anti-Smoking</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-emerald-400 transition">Cộng đồng</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-semibold text-emerald-400 mb-4 flex items-center gap-2">
-                    <i class="fas fa-cloud-check-alt"></i> Trạng thái hệ thống
-                </h4>
-                <div class="flex items-center gap-2 text-sm">
-                    <span class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
-                    <span class="text-gray-300">Mô hình AI thật + DB + Giám sát hệ thống hoạt động bình thường</span>
-                </div>
-            </div>
-        </div>
-        <div class="border-t border-gray-800 pt-6 text-center text-xs text-gray-500">
-            <p>© 2026 FaceGuard AI Pro v3.3 • Công nghệ nhận diện khuôn mặt + COCO-SSD Anti-Smoking + Giám sát hệ thống</p>
-            <p class="mt-2">Powered by TensorFlow.js • face-api.js • COCO-SSD Real Model • Grok AI • Database</p>
-        </div>
-        
-        <div class="mt-8 bg-gradient-to-r from-amber-900/40 to-red-900/40 rounded-2xl p-3 border border-orange-500/50 backdrop-blur-md">
-            <div class="flex items-center justify-between mb-2">
-                <h4 class="font-semibold text-orange-300 text-xs flex items-center gap-1.5">
-                    <i class="fas fa-rocket text-orange-400 text-sm"></i> NÂNG CẤP MỚI v3.3
-                </h4>
-                <span class="text-[9px] bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5">
-                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
-                </span>
-            </div>
-            <ul class="text-xs text-gray-300 space-y-1.5">
-                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>Phát hiện hút thuốc lá:</strong> COCO-SSD real-time</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>Mô hình AI thật:</strong> Tải &amp; chạy COCO-SSD trực tiếp</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>Cơ sở dữ liệu:</strong> localStorage DB ghi log vi phạm</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>Giám sát hệ thống:</strong> Log lỗi realtime, mô phỏng lỗi, status cards</li>
-                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-400"></i> <strong>Phần phụ trợ:</strong> Voice AI, biểu đồ, alert đặc biệt</li>
-            </ul>
-        </div>
-        
-        <div class="mt-6 text-center">
-            <p class="text-xs text-gray-400 mb-4">💡 Pro Tip: Vào trang "Giám sát Hệ thống" để xem log lỗi realtime. Nhấn nút "Mô phỏng lỗi" để test!</p>
-            <a href="https://agent-69ca57b535f7d61ef74562ad--thcsdoanketcam.netlify.app/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-xs font-semibold transition-all hover:gap-3">
-                <i class="fas fa-external-link-alt"></i> Xem demo live (đã nâng cấp v3.3)
+        <h1 class="title-font text-6xl md:text-7xl font-bold leading-none tracking-tighter mb-6 neon-text">
+            Bảo vệ tương lai<br>
+            <span class="bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">bằng trí tuệ nhân tạo</span>
+        </h1>
+
+        <p class="max-w-2xl mx-auto text-xl text-gray-300 mb-12">
+            FaceGuard AI Pro — Hệ thống giám sát khuôn mặt thời gian thực với <strong>Liveness Detection</strong>, phát hiện Deepfake, phân tích cảm xúc và bảo mật đa lớp.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-5 justify-center items-center">
+            <a href="#download" 
+               class="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-3xl text-xl font-semibold hover:scale-105 active:scale-95 transition-all flex items-center gap-4 shadow-2xl shadow-emerald-500/50">
+                <i class="fas fa-rocket group-active:rotate-12 transition"></i>
+                Bắt đầu miễn phí ngay
+            </a>
+            <a href="#dashboard" 
+               class="px-10 py-5 border-2 border-white/30 hover:border-white/60 rounded-3xl text-xl font-semibold transition flex items-center gap-4 backdrop-blur-md">
+                <i class="fas fa-play"></i>
+                Xem Dashboard Demo
             </a>
         </div>
+
+        <div class="mt-16 grid grid-cols-3 gap-8 max-w-md mx-auto text-center text-sm">
+            <div>
+                <div class="text-4xl font-bold text-emerald-400">99.8%</div>
+                <div class="text-gray-400">Độ chính xác</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-cyan-400">&lt;80ms</div>
+                <div class="text-gray-400">Thời gian thực</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold text-blue-400">∞</div>
+                <div class="text-gray-400">Người dùng</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- DASHBOARD DEMO -->
+<section id="dashboard" class="max-w-7xl mx-auto px-6 py-20">
+    <div class="text-center mb-12">
+        <h2 class="title-font text-5xl font-bold mb-4">Dashboard Giám sát Trực tiếp</h2>
+        <p class="text-gray-400 text-lg">Trải nghiệm giao diện AI realtime – Nhấn nút để mô phỏng phát hiện</p>
+    </div>
+    
+    <div class="glass rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+        <div class="bg-gradient-to-br from-slate-950 to-black p-8 relative" id="demo-area">
+            <div class="scan-line"></div>
+            
+            <!-- Header mock -->
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-lg">📷</div>
+                    <div>
+                        <div class="font-semibold">Camera Hall A • 12 người đang theo dõi</div>
+                        <div class="text-emerald-400 text-sm flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> AI đang hoạt động
+                        </div>
+                    </div>
+                </div>
+                <button onclick="simulateDetection()" 
+                        class="px-6 py-3 bg-red-500/80 hover:bg-red-600 rounded-2xl text-sm font-medium flex items-center gap-2 transition">
+                    <i class="fas fa-bolt"></i> Mô phỏng phát hiện bất thường
+                </button>
+            </div>
+
+            <!-- Webcam preview + controls -->
+            <div class="mb-6 flex flex-col items-center gap-4">
+                <div id="video-wrapper" class="hidden flex-col items-center gap-3">
+                    <video id="webcam" autoplay playsinline class="rounded-2xl w-72 h-48 bg-black"></video>
+                    <div class="flex gap-3">
+                        <button id="start-webcam" onclick="startWebcam()" class="px-4 py-2 bg-emerald-500 rounded-xl">Mở Webcam</button>
+                        <button id="capture-photo" onclick="capturePhoto()" class="px-4 py-2 bg-cyan-500 rounded-xl">Chụp</button>
+                        <button id="stop-webcam" onclick="stopWebcam()" class="px-4 py-2 bg-red-500 rounded-xl">Dừng</button>
+                    </div>
+                </div>
+                <button id="open-webcam-inline" onclick="openWebcamInline()" class="px-5 py-3 bg-white/6 rounded-2xl">Bật/Tắt Webcam</button>
+            </div>
+
+            <!-- Faces grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="faces-container">
+                <!-- JS sẽ thêm card ở đây -->
+            </div>
+
+            <div id="alert-box" class="hidden mt-8 p-6 bg-red-950/70 border border-red-500/50 rounded-2xl">
+                <div class="flex items-start gap-4">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+                    <div>
+                        <p class="font-semibold text-red-300">Cảnh báo: Phát hiện hành vi bất thường!</p>
+                        <p class="text-sm text-gray-300 mt-1" id="alert-detail">Người thứ 7 có chuyển động nhanh bất thường + nghi ngờ che mặt.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FACE DETAIL MODAL -->
+<div id="face-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-50">
+    <div class="bg-gray-900 p-6 rounded-2xl max-w-md w-full">
+        <div class="flex justify-end">
+            <button onclick="closeFaceModal()" class="px-3 py-1 bg-white/5 rounded">Đóng</button>
+        </div>
+        <div id="face-modal-content" class="mt-4 text-center text-gray-200"></div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features" class="max-w-7xl mx-auto px-6 py-24 bg-gray-950/60">
+    <div class="text-center mb-16">
+        <h2 class="title-font text-5xl font-bold mb-4">Tính năng AI Tiên tiến 2026</h2>
+        <p class="max-w-md mx-auto text-gray-400">Công nghệ mới nhất: Liveness • Anti-Deepfake • Emotion AI</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">🔍</div>
+            <h3 class="text-2xl font-semibold mb-3">Nhận diện &amp; Liveness Detection</h3>
+            <p class="text-gray-400">Phát hiện khuôn mặt sống thật, chống giả mạo bằng ảnh, video, mặt nạ và deepfake.</p>
+        </div>
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">🚨</div>
+            <h3 class="text-2xl font-semibold mb-3">Phát hiện bất thường + Emotion</h3>
+            <p class="text-gray-400">Phân tích cảm xúc, chuyển động lạ, giận dữ, lo lắng hoặc gian lận thời gian thực.</p>
+        </div>
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">🛡️</div>
+            <h3 class="text-2xl font-semibold mb-3">Anti-Deepfake AI</h3>
+            <p class="text-gray-400">Công nghệ mới nhất 2026 phát hiện video giả mạo bằng AI.</p>
+        </div>
+        <!-- Thêm các card khác tương tự -->
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">📊</div>
+            <h3 class="text-2xl font-semibold mb-3">Audit Log + Báo cáo</h3>
+            <p class="text-gray-400">Ghi nhận đầy đủ, xuất Excel/PDF, timeline sự kiện.</p>
+        </div>
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">📱</div>
+            <h3 class="text-2xl font-semibold mb-3">Dynamic Island + Mobile</h3>
+            <p class="text-gray-400">Giao diện đẹp, mượt mà trên mọi thiết bị.</p>
+        </div>
+        <div class="feature-card glass p-8 rounded-3xl">
+            <div class="text-5xl mb-6">🔐</div>
+            <h3 class="text-2xl font-semibold mb-3">Chạy hoàn toàn Local</h3>
+            <p class="text-gray-400">Không lưu dữ liệu lên cloud, bảo mật tuyệt đối.</p>
+        </div>
+    </div>
+</section>
+
+<!-- PREVIEW -->
+<section id="preview" class="max-w-6xl mx-auto px-6 py-20">
+    <div class="text-center mb-12">
+        <h2 class="title-font text-5xl font-bold mb-4">Giao diện Dynamic Island</h2>
+        <p class="text-gray-400">Thiết kế lấy cảm hứng từ iOS 18+ • Siêu mượt mà</p>
+    </div>
+    <div class="rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black relative">
+        <div class="h-[620px] bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center relative">
+            <div class="text-center">
+                <div class="mx-auto w-40 h-40 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-8 shadow-2xl">
+                    <span class="text-7xl">📷</span>
+                </div>
+                <p class="text-3xl font-medium text-emerald-300">FaceGuard AI đang giám sát...</p>
+            </div>
+            <!-- Dynamic Island -->
+            <div class="absolute top-12 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-xl rounded-3xl w-[380px] h-11 shadow-2xl flex items-center px-6 text-xs">
+                <div class="flex-1 flex items-center gap-3">
+                    <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span>12 khuôn mặt • 2 cảnh báo</span>
+                </div>
+                <div class="text-emerald-400 font-medium">AI Online</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BENEFITS + TESTIMONIAL -->
+<section id="benefits" class="max-w-7xl mx-auto px-6 py-24">
+    <div class="grid md:grid-cols-12 gap-16 items-center">
+        <div class="md:col-span-7">
+            <h2 class="title-font text-5xl font-bold mb-10">Tại sao hàng nghìn người chọn FaceGuard?</h2>
+            <div class="space-y-10">
+                <div class="flex gap-6">
+                    <div class="text-4xl text-emerald-400 mt-1">⚡</div>
+                    <div>
+                        <h4 class="text-2xl font-semibold">Tốc độ realtime trên trình duyệt</h4>
+                        <p class="text-gray-400">Không cần server mạnh, chạy mượt trên mọi máy tính.</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <div class="text-4xl text-emerald-400 mt-1">🔒</div>
+                    <div>
+                        <h4 class="text-2xl font-semibold">Bảo mật 100% local</h4>
+                        <p class="text-gray-400">Dữ liệu không rời khỏi thiết bị của bạn.</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <div class="text-4xl text-emerald-400 mt-1">🌐</div>
+                    <div>
+                        <h4 class="text-2xl font-semibold">Hỗ trợ lớp học, văn phòng, an ninh</h4>
+                        <p class="text-gray-400">Dùng cho giáo dục, doanh nghiệp và giám sát cá nhân.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="md:col-span-5 liquid-glass rounded-3xl p-10 border border-white/10">
+            <div class="italic text-2xl leading-relaxed">"FaceGuard giúp tôi quản lý lớp học 45 học sinh chỉ với một màn hình. Phát hiện gian lận thi cử cực kỳ chính xác."</div>
+            <div class="mt-10 flex items-center gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl"></div>
+                <div>
+                    <div class="font-semibold">Trần Thị Bích Ngọc</div>
+                    <div class="text-emerald-400 text-sm">Giáo viên Tin học • THPT Chuyên Hà Nội</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="py-24 bg-gradient-to-b from-transparent via-emerald-950/20 to-transparent">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+        <h2 class="title-font text-5xl font-bold mb-6">Chọn gói phù hợp</h2>
+        <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <!-- Free -->
+            <div class="glass rounded-3xl p-8">
+                <h3 class="text-2xl font-semibold mb-2">Free</h3>
+                <div class="text-5xl font-bold mb-6">0đ<span class="text-base font-normal text-gray-400">/tháng</span></div>
+                <ul class="space-y-4 text-left mb-10">
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Nhận diện cơ bản</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> 1 camera</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Demo realtime</li>
+                </ul>
+                <a href="#" class="block w-full py-4 border border-white/30 rounded-2xl font-medium">Dùng thử miễn phí</a>
+            </div>
+            
+            <!-- Pro -->
+            <div class="glass border-2 border-emerald-400 rounded-3xl p-8 relative scale-105">
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-xs font-bold px-6 py-1 rounded-full">PHỔ BIẾN NHẤT</div>
+                <h3 class="text-2xl font-semibold mb-2">Pro</h3>
+                <div class="text-5xl font-bold mb-6">299.000đ<span class="text-base font-normal text-gray-400">/tháng</span></div>
+                <ul class="space-y-4 text-left mb-10">
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Toàn bộ tính năng AI</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Không giới hạn camera</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Anti-Deepfake + Emotion</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Hỗ trợ ưu tiên</li>
+                </ul>
+                <a href="#download" class="block w-full py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl font-semibold">Nâng cấp ngay</a>
+            </div>
+            
+            <!-- Enterprise -->
+            <div class="glass rounded-3xl p-8">
+                <h3 class="text-2xl font-semibold mb-2">Enterprise</h3>
+                <div class="text-5xl font-bold mb-6">Liên hệ</div>
+                <ul class="space-y-4 text-left mb-10">
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Tùy chỉnh theo tổ chức</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> Hỗ trợ on-premise</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-check text-emerald-400"></i> API tích hợp</li>
+                </ul>
+                <a href="#" class="block w-full py-4 border border-white/30 rounded-2xl font-medium">Liên hệ tư vấn</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download" class="py-28 text-center">
+    <h2 class="title-font text-5xl font-bold mb-6">Sẵn sàng bảo vệ tương lai của bạn?</h2>
+    <p class="text-gray-400 mb-12 max-w-lg mx-auto">Tải phiên bản mới nhất — Chỉ là một file HTML, chạy ngay trên trình duyệt.</p>
+    
+    <a href="web-npm.zip" download
+       class="inline-flex items-center gap-5 px-12 py-7 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 rounded-3xl text-2xl font-bold hover:scale-110 transition-all shadow-2xl shadow-cyan-500/50">
+        <i class="fas fa-download text-3xl"></i>
+        TẢI FACE GUARD AI PRO v4.1
+    </a>
+    
+    <p class="text-gray-500 mt-8">• Chạy offline • Không cần cài đặt • An toàn tuyệt đối</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-white/10 py-16 text-center text-gray-500">
+    <div class="max-w-7xl mx-auto px-6">
+        <p class="text-xl mb-2">© 2026 FaceGuard AI Pro • Bảo vệ bằng trí tuệ</p>
+        <p class="text-xs">Phiên bản demo nâng cấp • Dùng cho mục đích học tập và trình diễn</p>
+        <p class="text-sm mt-4">Sáng tác bởi Trần Lê Gia Bảo (sinh 04/11/2011).</p>
     </div>
 </footer>
 
-<!-- AI STATS WIDGET -->
-<div id="ai-stats-widget" class="fixed bottom-8 left-8 bg-gradient-to-br from-emerald-900/90 to-teal-900/90 backdrop-blur-xl rounded-3xl p-6 border border-emerald-500/50 shadow-2xl max-w-sm z-[1000] glass transition-all duration-300">
-    <div class="flex items-center justify-between mb-4">
-        <h4 class="font-semibold text-emerald-300 flex items-center gap-2">
-            <i class="fas fa-microchip text-emerald-400"></i> AI REALTIME STATS
-        </h4>
-        <div class="flex items-center gap-2">
-            <span class="text-[10px] bg-emerald-500 text-black px-2 py-0.5 rounded-full font-bold">LIVE</span>
-            <button onclick="toggleStatsWidget()" class="w-6 h-6 flex items-center justify-center hover:bg-emerald-500/30 rounded-lg transition-colors">
-                <i id="stats-toggle-icon" class="fas fa-chevron-down text-emerald-400 text-xs"></i>
-            </button>
-        </div>
-    </div>
-    <div id="stats-content" class="space-y-2 text-xs text-gray-200">
-        <div class="flex justify-between items-center"><span>GPU Usage:</span><div class="w-20 h-2 bg-gray-700 rounded-full overflow-hidden"><div id="gpu-bar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400" style="width: 64%;"></div></div></div>
-        <div class="flex justify-between items-center"><span>FPS:</span><span id="fps-counter" class="font-mono text-emerald-300 font-bold">60 FPS</span></div>
-        <div class="flex justify-between items-center"><span>Model Latency:</span><span id="latency-counter" class="font-mono text-yellow-300">28ms</span></div>
-        <div class="flex justify-between items-center pt-2 border-t border-emerald-500/30"><span>Faces Tracked:</span><span id="tracked-faces" class="font-mono text-blue-300 font-bold">4</span></div>
-        <div class="flex justify-between items-center"><span>Smoking Detected:</span><span id="smoking-live" class="font-mono text-orange-400 font-bold">0</span></div>
-        <div class="flex justify-between items-center"><span>Confidence Avg:</span><span id="confidence-avg" class="font-mono text-emerald-300">99.7%</span></div>
-    </div>
-</div>
-
 <script>
-function toggleStatsWidget() {
-    const content = document.getElementById('stats-content');
-    const icon = document.getElementById('stats-toggle-icon');
-    if (content.style.display === 'none') {
-        content.style.display = 'block';
-        icon.classList.add('fa-chevron-down');
-        icon.classList.remove('fa-chevron-up');
-    } else {
-        content.style.display = 'none';
-        icon.classList.add('fa-chevron-up');
-        icon.classList.remove('fa-chevron-down');
+    // Tailwind script
+    tailwind.config = {
+        content: [],
+        theme: {
+            extend: {}
+        }
     }
-}
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            if (this.getAttribute('href') !== '#') {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Mobile menu toggle
+    const mobileButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileButton) {
+        mobileButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+
+    // Webcam handling
+    let stream = null;
+    const webcamEl = document.getElementById('webcam');
+    const videoWrapper = document.getElementById('video-wrapper');
+
+    function openWebcamInline() {
+        if (videoWrapper.classList.contains('hidden')) {
+            videoWrapper.classList.remove('hidden');
+            startWebcam();
+        } else {
+            stopWebcam();
+            videoWrapper.classList.add('hidden');
+        }
+    }
+
+    async function startWebcam() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            webcamEl.srcObject = stream;
+            await webcamEl.play();
+        } catch (err) {
+            alert('Không thể mở webcam: ' + err.message);
+        }
+    }
+
+    function stopWebcam() {
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+        }
+        if (webcamEl) webcamEl.pause();
+    }
+
+    function capturePhoto() {
+        if (!webcamEl || !stream) {
+            alert('Webcam chưa được bật.');
+            return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = webcamEl.videoWidth || 640;
+        canvas.height = webcamEl.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(webcamEl, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+
+        const container = document.getElementById('faces-container');
+        const card = document.createElement('div');
+        card.className = 'glass p-4 rounded-2xl text-center cursor-pointer';
+        card.innerHTML = `
+            <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl overflow-hidden">
+                <img src="${dataUrl}" alt="capture" class="w-full h-full object-cover" />
+            </div>
+            <p class="font-medium">Ảnh chụp</p>
+            <p class="text-emerald-400 text-xs">Đang theo dõi</p>
+        `;
+        card.addEventListener('click', () => showFaceModal(dataUrl, 'Ảnh chụp từ webcam'));
+        container.prepend(card);
+    }
+
+    // Face modal
+    function showFaceModal(imgData, detailText) {
+        const modal = document.getElementById('face-modal');
+        const content = document.getElementById('face-modal-content');
+        content.innerHTML = `
+            <img src="${imgData}" class="mx-auto rounded-lg mb-4 w-full object-cover" />
+            <div class="font-semibold text-lg">${detailText}</div>
+            <div class="text-sm text-gray-400 mt-2">Thời gian: ${new Date().toLocaleString()}</div>
+        `;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeFaceModal() {
+        const modal = document.getElementById('face-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Simple demo simulation
+    function simulateDetection() {
+        const container = document.getElementById('faces-container');
+        container.innerHTML = `
+            <div class="glass p-4 rounded-2xl text-center">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Nguyễn Văn A</p>
+                <p class="text-emerald-400 text-sm">Đã nhận diện • 98%</p>
+            </div>
+            <div class="glass p-4 rounded-2xl text-center border border-amber-400">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Trần Thị B</p>
+                <p class="text-amber-400 text-sm">Cảnh báo: Chuyển động lạ</p>
+            </div>
+        `;
+        
+        const alertBox = document.getElementById('alert-box');
+        alertBox.classList.remove('hidden');
+        alertBox.classList.add('animate-pulse');
+        
+        setTimeout(() => {
+            alertBox.classList.add('hidden');
+        }, 6000);
+    }
+
+    // Auto add some faces on load
+    window.onload = () => {
+        const container = document.getElementById('faces-container');
+        container.innerHTML = `
+            <div class="glass p-4 rounded-2xl text-center">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Người 1</p>
+                <p class="text-emerald-400 text-xs">Đang theo dõi</p>
+            </div>
+            <div class="glass p-4 rounded-2xl text-center">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Người 2</p>
+                <p class="text-emerald-400 text-xs">Đang theo dõi</p>
+            </div>
+            <div class="glass p-4 rounded-2xl text-center">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Người 3</p>
+                <p class="text-emerald-400 text-xs">Đang theo dõi</p>
+            </div>
+            <div class="glass p-4 rounded-2xl text-center">
+                <div class="w-20 h-20 mx-auto bg-zinc-800 rounded-2xl mb-3 flex items-center justify-center text-3xl">👤</div>
+                <p class="font-medium">Người 4</p>
+                <p class="text-emerald-400 text-xs">Đang theo dõi</p>
+            </div>
+        `;
+    }
 </script>
 </body>
 </html>
